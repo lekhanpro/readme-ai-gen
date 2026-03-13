@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>readme-ai-gen</title>
+    <meta
+      name="description"
+      content="Generate polished GitHub profile and project READMEs from a URL with a Vercel-ready web interface."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <header class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow">GitHub README Studio</p>
+        <h1>Turn a raw GitHub URL into a README people actually keep.</h1>
+        <p class="lede">
+          Fetch real GitHub data, shape the README visually, and export production-ready Markdown without touching a prompt.
+        </p>
+        <div class="hero-pills">
+          <span>Profile mode</span>
+          <span>Project mode</span>
+          <span>Vercel-ready API</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <p class="card-label">What it does</p>
+        <ul>
+          <li>Analyzes a GitHub profile or repository</li>
+          <li>Builds badges, cards, and README widgets deterministically</li>
+          <li>Generates final Markdown through Gemini or OpenAI</li>
+        </ul>
+      </div>
+    </header>
+
+    <main class="shell workspace">
+      <section class="panel controls-panel">
+        <div class="panel-heading">
+          <p class="panel-label">Generator</p>
+          <h2>Configure the README</h2>
+        </div>
+
+        <div class="sample-row">
+          <button type="button" class="sample-button" data-sample="https://github.com/vercel">Profile example</button>
+          <button type="button" class="sample-button" data-sample="https://github.com/vercel/next.js">Project example</button>
+        </div>
+
+        <form id="generator-form" class="generator-form">
+          <label class="field">
+            <span>GitHub URL</span>
+            <input id="repo-url" name="url" type="url" required placeholder="https://github.com/username or https://github.com/username/repo" />
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Mode</span>
+              <select id="mode" name="mode">
+                <option value="auto">Auto-detect</option>
+                <option value="profile">Profile</option>
+                <option value="project">Project</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Provider</span>
+              <select id="llm" name="llm">
+                <option value="gemini">Gemini</option>
+                <option value="openai">OpenAI</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="field">
+            <span>Color theme</span>
+            <div class="swatch-row" id="swatches">
+              <button type="button" class="swatch active" data-color="A855F7" style="--swatch:#A855F7;">Purple</button>
+              <button type="button" class="swatch" data-color="06B6D4" style="--swatch:#06B6D4;">Cyan</button>
+              <button type="button" class="swatch" data-color="22C55E" style="--swatch:#22C55E;">Green</button>
+              <button type="button" class="swatch" data-color="F97316" style="--swatch:#F97316;">Orange</button>
+            </div>
+            <input id="color" name="color" type="hidden" value="A855F7" />
+          </div>
+
+          <details class="advanced">
+            <summary>Advanced options</summary>
+            <div class="advanced-grid">
+              <label class="field">
+                <span>Header</span>
+                <select id="header_type" name="header_type">
+                  <option value="venom">venom</option>
+                  <option value="waving">waving</option>
+                  <option value="soft">soft</option>
+                  <option value="rect">rect</option>
+                  <option value="cylinder">cylinder</option>
+                  <option value="slice">slice</option>
+                  <option value="shark">shark</option>
+                  <option value="egg">egg</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Font</span>
+                <select id="font" name="font">
+                  <option value="JetBrains Mono">JetBrains Mono</option>
+                  <option value="Fira Code">Fira Code</option>
+                  <option value="Space Mono">Space Mono</option>
+                  <option value="Orbitron">Orbitron</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Stats theme</span>
+                <select id="stats_theme" name="stats_theme">
+                  <option value="radical">radical</option>
+                  <option value="github_dark">github_dark</option>
+                  <option value="tokyonight">tokyonight</option>
+                  <option value="dracula">dracula</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Sections (CSV)</span>
+                <input id="sections" name="sections" type="text" value="" placeholder="Leave blank for defaults" />
+              </label>
+            </div>
+          </details>
+
+          <button id="submit-button" class="submit-button" type="submit">Generate README</button>
+        </form>
+      </section>
+
+      <section class="panel output-panel">
+        <div class="panel-heading output-heading">
+          <div>
+            <p class="panel-label">Output</p>
+            <h2>README draft</h2>
+          </div>
+          <span id="status-pill" class="status-pill idle">Idle</span>
+        </div>
+
+        <div id="summary-grid" class="summary-grid">
+          <article>
+            <span>Mode</span>
+            <strong>Waiting</strong>
+          </article>
+          <article>
+            <span>Identity</span>
+            <strong>Paste a URL</strong>
+          </article>
+          <article>
+            <span>Languages</span>
+            <strong>Detected after fetch</strong>
+          </article>
+          <article>
+            <span>Lines</span>
+            <strong>0</strong>
+          </article>
+        </div>
+
+        <div class="action-row">
+          <button type="button" id="copy-button" class="ghost-button" disabled>Copy Markdown</button>
+          <button type="button" id="download-button" class="ghost-button" disabled>Download README.md</button>
+        </div>
+
+        <label class="field output-field">
+          <span>Markdown</span>
+          <textarea id="markdown-output" readonly placeholder="Your generated README will land here."></textarea>
+        </label>
+
+        <p id="error-box" class="error-box" hidden></p>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
