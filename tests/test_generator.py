@@ -11,6 +11,7 @@ from readme_ai_gen.generator import ReadmeGenerator, build_user_prompt
 CONTEXT = {
     "mode": "project",
     "username": "mithun50",
+    "repo": "readme-ai-gen",
     "display_name": "Mithun Gowda",
     "location": "Karnataka, India",
     "bio": "Python engineer and OSS builder.",
@@ -126,6 +127,15 @@ class GeneratorTestCase(unittest.IsolatedAsyncioTestCase):
         generator = ReadmeGenerator(gemini_api_key=None, openai_api_key=None)
         with self.assertRaisesRegex(Exception, "No API key found"):
             await generator.generate(CONTEXT, CONFIG, BUILT_URLS, "gemini")
+
+    async def test_generate_uses_fallback_when_enabled(self) -> None:
+        """Fallback rendering should produce Markdown when no provider key exists."""
+        generator = ReadmeGenerator(gemini_api_key=None, openai_api_key=None)
+        fallback_config = dict(CONFIG)
+        fallback_config["allow_fallback"] = True
+        output = await generator.generate(CONTEXT, fallback_config, BUILT_URLS, "gemini")
+        self.assertIn("# About", output)
+        self.assertIn("https://capsule-render.vercel.app/api?type=venom", output)
 
 
 if __name__ == "__main__":

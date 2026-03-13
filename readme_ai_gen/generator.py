@@ -1,4 +1,4 @@
-﻿"""LLM prompt construction and provider integrations for readme-ai-gen."""
+"""LLM prompt construction and provider integrations for readme-ai-gen."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import os
 from typing import Any
 
 from .config import DEFAULT_GEMINI_MODEL, DEFAULT_OPENAI_MODEL
+from .fallback import render_fallback_readme
 from .utils import DependencyError, LLMError, safe_excerpt, strip_markdown_fences
 
 SYSTEM_PROMPT_TEMPLATE = """
@@ -181,7 +182,11 @@ class ReadmeGenerator:
         system_prompt = self.build_system_prompt(config["output_length"], config["tone"])
         user_prompt = build_user_prompt(context, config, built_urls)
         provider_name = provider.lower()
-        if provider_name == "gemini":
+        if provider_name == "gemini" and not self.gemini_api_key and config.get("allow_fallback"):
+            markdown = render_fallback_readme(context, config, built_urls)
+        elif provider_name == "openai" and not self.openai_api_key and config.get("allow_fallback"):
+            markdown = render_fallback_readme(context, config, built_urls)
+        elif provider_name == "gemini":
             markdown = await self._generate_with_gemini(system_prompt, user_prompt, config)
         elif provider_name == "openai":
             markdown = await self._generate_with_openai(system_prompt, user_prompt, config)
@@ -456,3 +461,6 @@ def _build_section_instruction_block(context: dict[str, Any], config: dict[str, 
         if instruction:
             blocks.append(instruction)
     return "\n\n".join(blocks)
+
+
+
