@@ -69,8 +69,8 @@ def build_web_config(payload: dict[str, Any]) -> dict[str, Any]:
         icon_list = [str(icon).strip() for icon in icons if str(icon).strip()]
 
     provider = str(payload.get("llm") or os.getenv("DEFAULT_LLM", DEFAULT_LLM)).lower()
-    if provider not in {"gemini", "openai"}:
-        raise ValueError("Invalid provider. Use 'gemini' or 'openai'.")
+    if provider not in {"gemini", "openai", "groq"}:
+        raise ValueError("Invalid provider. Use 'gemini', 'openai', or 'groq'.")
 
     return {
         "mode": mode,
@@ -86,7 +86,9 @@ def build_web_config(payload: dict[str, Any]) -> dict[str, Any]:
         "sections": ordered_sections,
         "icons": icon_list,
         "llm": provider,
+        "allow_fallback": True,
         "gemini_model": os.getenv("GEMINI_MODEL") or None,
+        "groq_model": os.getenv("GROQ_MODEL") or None,
         "openai_model": os.getenv("OPENAI_MODEL") or None,
         "output_length": DEFAULT_OUTPUT_LENGTH,
         "tone": DEFAULT_TONE,
@@ -108,6 +110,7 @@ class handler(BaseHTTPRequestHandler):
                 "ok": True,
                 "service": "readme-ai-gen",
                 "providers": {
+                    "groq": bool(os.getenv("GROQ_API_KEY")),
                     "gemini": bool(os.getenv("GEMINI_API_KEY")),
                     "openai": bool(os.getenv("OPENAI_API_KEY")),
                 },

@@ -1,4 +1,4 @@
-﻿"""Unit tests for prompt assembly and provider selection."""
+"""Unit tests for prompt assembly and provider selection."""
 
 from __future__ import annotations
 
@@ -124,13 +124,20 @@ class GeneratorTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_generate_requires_api_key(self) -> None:
         """Gemini generation should fail cleanly without credentials."""
-        generator = ReadmeGenerator(gemini_api_key=None, openai_api_key=None)
+        generator = ReadmeGenerator(gemini_api_key=None, openai_api_key=None, groq_api_key=None)
         with self.assertRaisesRegex(Exception, "No API key found"):
             await generator.generate(CONTEXT, CONFIG, BUILT_URLS, "gemini")
 
+    async def test_generate_routes_to_groq(self) -> None:
+        """The generator should dispatch to the Groq provider when requested."""
+        generator = ReadmeGenerator(groq_api_key="key")
+        with patch.object(generator, "_generate_with_groq", AsyncMock(return_value="# Groq")):
+            output = await generator.generate(CONTEXT, CONFIG, BUILT_URLS, "groq")
+        self.assertEqual(output, "# Groq")
+
     async def test_generate_uses_fallback_when_enabled(self) -> None:
         """Fallback rendering should produce Markdown when no provider key exists."""
-        generator = ReadmeGenerator(gemini_api_key=None, openai_api_key=None)
+        generator = ReadmeGenerator(gemini_api_key=None, openai_api_key=None, groq_api_key=None)
         fallback_config = dict(CONFIG)
         fallback_config["allow_fallback"] = True
         output = await generator.generate(CONTEXT, fallback_config, BUILT_URLS, "gemini")

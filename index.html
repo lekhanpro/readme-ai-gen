@@ -6,7 +6,7 @@
     <title>readme-ai-gen</title>
     <meta
       name="description"
-      content="Generate polished GitHub profile and project READMEs from a URL with a Vercel-ready web interface."
+      content="Build premium GitHub profile and project READMEs from a single URL with a fast web studio."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,163 +17,332 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="ambient ambient-one"></div>
-    <div class="ambient ambient-two"></div>
-    <header class="hero shell">
-      <div class="hero-copy">
-        <p class="eyebrow">GitHub README Studio</p>
-        <h1>Turn a raw GitHub URL into a README people actually keep.</h1>
-        <p class="lede">
-          Fetch real GitHub data, shape the README visually, and export production-ready Markdown without touching a prompt.
-        </p>
-        <div class="hero-pills">
-          <span>Profile mode</span>
-          <span>Project mode</span>
-          <span>Vercel-ready API</span>
-        </div>
-      </div>
-      <div class="hero-card">
-        <p class="card-label">What it does</p>
-        <ul>
-          <li>Analyzes a GitHub profile or repository</li>
-          <li>Builds badges, cards, and README widgets deterministically</li>
-          <li>Generates final Markdown through Gemini or OpenAI</li>
-        </ul>
-      </div>
+    <div class="noise"></div>
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+    <div class="orb orb-three"></div>
+
+    <header class="site-header shell">
+      <a class="brand" href="#top">
+        <span class="brand-mark">R</span>
+        <span class="brand-copy">
+          <strong>readme-ai-gen</strong>
+          <small>README profile maker and repo generator</small>
+        </span>
+      </a>
+      <nav class="header-actions">
+        <a href="#studio" class="ghost-link">Open studio</a>
+        <a href="https://github.com/lekhanpro/readme-ai-gen" class="ghost-link">GitHub</a>
+      </nav>
     </header>
 
-    <main class="shell workspace">
-      <section class="panel controls-panel">
-        <div class="panel-heading">
-          <p class="panel-label">Generator</p>
-          <h2>Configure the README</h2>
+    <main id="top">
+      <section class="hero shell">
+        <div class="hero-copy panel-glass">
+          <p class="eyebrow">Profile README generator</p>
+          <h1>Make your GitHub README look intentional, not assembled.</h1>
+          <p class="lede">
+            Paste a GitHub profile or repository URL, choose a visual direction, and generate a production-ready README with real data,
+            badges, widgets, and clean markdown.
+          </p>
+          <div class="hero-actions">
+            <a href="#studio" class="primary-link">Start generating</a>
+            <button type="button" class="ghost-button sample-button" data-sample="https://github.com/vercel" data-mode="profile">Try profile</button>
+            <button type="button" class="ghost-button sample-button" data-sample="https://github.com/vercel/next.js" data-mode="project">Try project</button>
+          </div>
+          <div class="hero-strip">
+            <span>Groq default</span>
+            <span>Profile + project</span>
+            <span>Copy or download</span>
+          </div>
         </div>
 
-        <div class="sample-row">
-          <button type="button" class="sample-button" data-sample="https://github.com/vercel">Profile example</button>
-          <button type="button" class="sample-button" data-sample="https://github.com/vercel/next.js">Project example</button>
+        <div class="hero-showcase panel-glass">
+          <div class="showcase-window">
+            <div class="window-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="preview-stack">
+              <div class="preview-banner"></div>
+              <div class="preview-lines">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="preview-grid">
+                <article>
+                  <strong>Header</strong>
+                  <p>capsule-render hero</p>
+                </article>
+                <article>
+                  <strong>Stats</strong>
+                  <p>cards, streaks, trophies</p>
+                </article>
+                <article>
+                  <strong>Sections</strong>
+                  <p>profile or project mode</p>
+                </article>
+                <article>
+                  <strong>Output</strong>
+                  <p>raw markdown, ready to ship</p>
+                </article>
+              </div>
+            </div>
+          </div>
+          <div class="floating-tags">
+            <span>README.md</span>
+            <span>github profile</span>
+            <span>repo docs</span>
+          </div>
         </div>
-
-        <form id="generator-form" class="generator-form">
-          <label class="field">
-            <span>GitHub URL</span>
-            <input id="repo-url" name="url" type="url" required placeholder="https://github.com/username or https://github.com/username/repo" />
-          </label>
-
-          <div class="field-grid">
-            <label class="field">
-              <span>Mode</span>
-              <select id="mode" name="mode">
-                <option value="auto">Auto-detect</option>
-                <option value="profile">Profile</option>
-                <option value="project">Project</option>
-              </select>
-            </label>
-
-            <label class="field">
-              <span>Provider</span>
-              <select id="llm" name="llm">
-                <option value="gemini">Gemini</option>
-                <option value="openai">OpenAI</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="field">
-            <span>Color theme</span>
-            <div class="swatch-row" id="swatches">
-              <button type="button" class="swatch active" data-color="A855F7" style="--swatch:#A855F7;">Purple</button>
-              <button type="button" class="swatch" data-color="06B6D4" style="--swatch:#06B6D4;">Cyan</button>
-              <button type="button" class="swatch" data-color="22C55E" style="--swatch:#22C55E;">Green</button>
-              <button type="button" class="swatch" data-color="F97316" style="--swatch:#F97316;">Orange</button>
-            </div>
-            <input id="color" name="color" type="hidden" value="A855F7" />
-          </div>
-
-          <details class="advanced">
-            <summary>Advanced options</summary>
-            <div class="advanced-grid">
-              <label class="field">
-                <span>Header</span>
-                <select id="header_type" name="header_type">
-                  <option value="venom">venom</option>
-                  <option value="waving">waving</option>
-                  <option value="soft">soft</option>
-                  <option value="rect">rect</option>
-                  <option value="cylinder">cylinder</option>
-                  <option value="slice">slice</option>
-                  <option value="shark">shark</option>
-                  <option value="egg">egg</option>
-                </select>
-              </label>
-              <label class="field">
-                <span>Font</span>
-                <select id="font" name="font">
-                  <option value="JetBrains Mono">JetBrains Mono</option>
-                  <option value="Fira Code">Fira Code</option>
-                  <option value="Space Mono">Space Mono</option>
-                  <option value="Orbitron">Orbitron</option>
-                </select>
-              </label>
-              <label class="field">
-                <span>Stats theme</span>
-                <select id="stats_theme" name="stats_theme">
-                  <option value="radical">radical</option>
-                  <option value="github_dark">github_dark</option>
-                  <option value="tokyonight">tokyonight</option>
-                  <option value="dracula">dracula</option>
-                </select>
-              </label>
-              <label class="field">
-                <span>Sections (CSV)</span>
-                <input id="sections" name="sections" type="text" value="" placeholder="Leave blank for defaults" />
-              </label>
-            </div>
-          </details>
-
-          <button id="submit-button" class="submit-button" type="submit">Generate README</button>
-        </form>
       </section>
 
-      <section class="panel output-panel">
-        <div class="panel-heading output-heading">
-          <div>
-            <p class="panel-label">Output</p>
-            <h2>README draft</h2>
-          </div>
-          <span id="status-pill" class="status-pill idle">Idle</span>
+      <section class="stats-ribbon shell">
+        <article class="ribbon-card">
+          <strong>3</strong>
+          <span>LLM providers</span>
+        </article>
+        <article class="ribbon-card">
+          <strong>20+</strong>
+          <span>README sections</span>
+        </article>
+        <article class="ribbon-card">
+          <strong>1</strong>
+          <span>GitHub URL input</span>
+        </article>
+      </section>
+
+      <section class="feature-row shell">
+        <article class="feature-card">
+          <p class="feature-kicker">Structured fetch</p>
+          <h2>Reads GitHub first</h2>
+          <p>Profiles, pinned repos, languages, project metadata, badges, and widgets are resolved before generation.</p>
+        </article>
+        <article class="feature-card accent-card">
+          <p class="feature-kicker">Visual control</p>
+          <h2>Tuned for profile README aesthetics</h2>
+          <p>Header styles, theme colors, section toggles, and tech icons are all configurable from the studio.</p>
+        </article>
+        <article class="feature-card">
+          <p class="feature-kicker">Fast export</p>
+          <h2>Copy or download instantly</h2>
+          <p>Generate the markdown, review it in place, copy it to your clipboard, or save it as <code>README.md</code>.</p>
+        </article>
+      </section>
+
+      <section class="studio shell" id="studio">
+        <div class="section-heading">
+          <p class="eyebrow">Generator studio</p>
+          <h2>Shape the README before you render it.</h2>
+          <p>
+            The layout is opinionated so the output looks closer to polished GitHub profile generators than a raw API wrapper.
+          </p>
         </div>
 
-        <div id="summary-grid" class="summary-grid">
-          <article>
-            <span>Mode</span>
-            <strong>Waiting</strong>
-          </article>
-          <article>
-            <span>Identity</span>
-            <strong>Paste a URL</strong>
-          </article>
-          <article>
-            <span>Languages</span>
-            <strong>Detected after fetch</strong>
-          </article>
-          <article>
-            <span>Lines</span>
-            <strong>0</strong>
-          </article>
+        <div class="studio-grid">
+          <form id="generator-form" class="panel-solid control-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="panel-label">Input</p>
+                <h3>Source + theme</h3>
+              </div>
+              <span class="locked-pill">header and footer always on</span>
+            </div>
+
+            <label class="field field-wide">
+              <span>GitHub URL</span>
+              <input id="repo-url" name="url" type="url" required placeholder="https://github.com/username or https://github.com/username/repo" />
+            </label>
+
+            <div class="split-fields">
+              <div class="field-shell">
+                <span>Mode</span>
+                <div class="segmented" id="mode-group">
+                  <button type="button" class="segment active" data-target="mode" data-value="auto">Auto</button>
+                  <button type="button" class="segment" data-target="mode" data-value="profile">Profile</button>
+                  <button type="button" class="segment" data-target="mode" data-value="project">Project</button>
+                </div>
+                <input id="mode" name="mode" type="hidden" value="auto" />
+              </div>
+
+              <div class="field-shell">
+                <span>Provider</span>
+                <div class="segmented" id="provider-group">
+                  <button type="button" class="segment active" data-target="llm" data-value="groq">Groq</button>
+                  <button type="button" class="segment" data-target="llm" data-value="gemini">Gemini</button>
+                  <button type="button" class="segment" data-target="llm" data-value="openai">OpenAI</button>
+                </div>
+                <input id="llm" name="llm" type="hidden" value="groq" />
+              </div>
+            </div>
+
+            <div class="field-shell">
+              <span>Color theme</span>
+              <div class="theme-grid" id="theme-grid">
+                <button type="button" class="theme-card active" data-color="A855F7" style="--theme:#A855F7;">
+                  <strong>Purple</strong>
+                  <small>#A855F7</small>
+                </button>
+                <button type="button" class="theme-card" data-color="06B6D4" style="--theme:#06B6D4;">
+                  <strong>Cyan</strong>
+                  <small>#06B6D4</small>
+                </button>
+                <button type="button" class="theme-card" data-color="22C55E" style="--theme:#22C55E;">
+                  <strong>Green</strong>
+                  <small>#22C55E</small>
+                </button>
+                <button type="button" class="theme-card" data-color="F97316" style="--theme:#F97316;">
+                  <strong>Orange</strong>
+                  <small>#F97316</small>
+                </button>
+                <button type="button" class="theme-card" data-color="EC4899" style="--theme:#EC4899;">
+                  <strong>Pink</strong>
+                  <small>#EC4899</small>
+                </button>
+                <button type="button" class="theme-card" data-color="3B82F6" style="--theme:#3B82F6;">
+                  <strong>Blue</strong>
+                  <small>#3B82F6</small>
+                </button>
+              </div>
+              <input id="color" name="color" type="hidden" value="A855F7" />
+            </div>
+
+            <div class="field-shell">
+              <div class="field-headline">
+                <span>Sections</span>
+                <small>Profile and project defaults are preselected.</small>
+              </div>
+              <div class="section-grid" id="section-grid">
+                <label class="section-chip" data-modes="all"><input type="checkbox" value="typing" checked />typing</label>
+                <label class="section-chip" data-modes="all"><input type="checkbox" value="badges" checked />badges</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="snake" checked />snake</label>
+                <label class="section-chip" data-modes="all"><input type="checkbox" value="about" checked />about</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="ventures" checked />ventures</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="opensource" checked />opensource</label>
+                <label class="section-chip" data-modes="project"><input type="checkbox" value="features" checked />features</label>
+                <label class="section-chip" data-modes="project"><input type="checkbox" value="install" checked />install</label>
+                <label class="section-chip" data-modes="project"><input type="checkbox" value="usage" checked />usage</label>
+                <label class="section-chip" data-modes="project"><input type="checkbox" value="tree" checked />tree</label>
+                <label class="section-chip" data-modes="all"><input type="checkbox" value="tech" checked />tech</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="stats" checked />stats</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="contrib_graph" checked />contrib graph</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="trophies" checked />trophies</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="quote" checked />quote</label>
+                <label class="section-chip" data-modes="profile"><input type="checkbox" value="social" checked />social</label>
+                <label class="section-chip" data-modes="project"><input type="checkbox" value="contribute" checked />contribute</label>
+              </div>
+            </div>
+
+            <label class="field field-wide">
+              <span>Tech icons</span>
+              <input id="icons" name="icons" type="text" value="py,ts,js,react,fastapi,docker,git,linux" placeholder="py,ts,js,react,fastapi,docker" />
+            </label>
+
+            <details class="advanced-panel">
+              <summary>Advanced options</summary>
+              <div class="advanced-grid">
+                <label class="field">
+                  <span>Header type</span>
+                  <select id="header_type" name="header_type">
+                    <option value="venom">venom</option>
+                    <option value="waving">waving</option>
+                    <option value="soft">soft</option>
+                    <option value="rect">rect</option>
+                    <option value="cylinder">cylinder</option>
+                    <option value="slice">slice</option>
+                    <option value="shark">shark</option>
+                    <option value="egg">egg</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Animation</span>
+                  <select id="animation" name="animation">
+                    <option value="twinkling">twinkling</option>
+                    <option value="fadeIn">fadeIn</option>
+                    <option value="scaleIn">scaleIn</option>
+                    <option value="blink">blink</option>
+                    <option value="blinking">blinking</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Font</span>
+                  <select id="font" name="font">
+                    <option value="JetBrains Mono">JetBrains Mono</option>
+                    <option value="Fira Code">Fira Code</option>
+                    <option value="Orbitron">Orbitron</option>
+                    <option value="Space Mono">Space Mono</option>
+                    <option value="Courier Prime">Courier Prime</option>
+                    <option value="Roboto Mono">Roboto Mono</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Stats theme</span>
+                  <select id="stats_theme" name="stats_theme">
+                    <option value="radical">radical</option>
+                    <option value="tokyonight">tokyonight</option>
+                    <option value="dracula">dracula</option>
+                    <option value="midnight-purple">midnight-purple</option>
+                    <option value="synthwave">synthwave</option>
+                    <option value="github_dark">github_dark</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Badge style</span>
+                  <select id="badge_style" name="badge_style">
+                    <option value="for-the-badge">for-the-badge</option>
+                    <option value="flat-square">flat-square</option>
+                    <option value="flat">flat</option>
+                    <option value="plastic">plastic</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Capsule height</span>
+                  <input id="height" name="height" type="number" min="120" max="320" value="200" />
+                </label>
+              </div>
+            </details>
+
+            <div class="form-actions">
+              <button id="submit-button" type="submit" class="primary-button">Generate README</button>
+              <button type="button" class="ghost-button sample-button" data-sample="https://github.com/torvalds" data-mode="profile">Load sample</button>
+            </div>
+          </form>
+
+          <section class="panel-solid result-panel">
+            <div class="result-topbar">
+              <div>
+                <p class="panel-label">Output</p>
+                <h3>Live markdown workspace</h3>
+              </div>
+              <span class="status-pill idle" id="status-pill">Idle</span>
+            </div>
+
+            <div class="provider-health" id="provider-health">
+              <span class="health-chip">Checking providers...</span>
+            </div>
+
+            <div class="summary-grid" id="summary-grid"></div>
+
+            <div class="action-row">
+              <button id="copy-button" type="button" class="ghost-button" disabled>Copy markdown</button>
+              <button id="download-button" type="button" class="ghost-button" disabled>Download README.md</button>
+            </div>
+
+            <label class="field output-field">
+              <span>README preview</span>
+              <textarea id="markdown-output" spellcheck="false" placeholder="# Your README will render here after generation"></textarea>
+            </label>
+
+            <div id="error-box" class="error-box" hidden></div>
+          </section>
         </div>
-
-        <div class="action-row">
-          <button type="button" id="copy-button" class="ghost-button" disabled>Copy Markdown</button>
-          <button type="button" id="download-button" class="ghost-button" disabled>Download README.md</button>
-        </div>
-
-        <label class="field output-field">
-          <span>Markdown</span>
-          <textarea id="markdown-output" readonly placeholder="Your generated README will land here."></textarea>
-        </label>
-
-        <p id="error-box" class="error-box" hidden></p>
       </section>
     </main>
 

@@ -1,4 +1,4 @@
-"""LLM prompt construction and provider integrations for readme-ai-gen."""
+﻿"""LLM prompt construction and provider integrations for readme-ai-gen."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import asyncio
 import os
 from typing import Any
 
-from .config import DEFAULT_GEMINI_MODEL, DEFAULT_OPENAI_MODEL
+from .config import DEFAULT_GEMINI_MODEL, DEFAULT_GROQ_MODEL, DEFAULT_OPENAI_MODEL, GROQ_OPENAI_BASE_URL
 from .fallback import render_fallback_readme
 from .utils import DependencyError, LLMError, safe_excerpt, strip_markdown_fences
 
@@ -14,7 +14,7 @@ SYSTEM_PROMPT_TEMPLATE = """
 You are a professional README engineer. You generate complete, 
 premium-quality README.md files for GitHub.
 
-ABSOLUTE RULES — never break these:
+ABSOLUTE RULES - never break these:
 1. Zero mentions of AI, automation, or readme-ai-gen in output.
 2. Zero placeholder text. Every value must be real data.
 3. Zero watermarks. The README belongs to the developer entirely.
@@ -24,13 +24,13 @@ ABSOLUTE RULES — never break these:
 7. All image and badge URLs are pre-built. Use them exactly as given.
    Do not modify, reconstruct, or regenerate any URL.
 8. Never line-wrap image/badge URLs. Each URL must be on one line.
-9. Wrap header + typing + badges in <div align="center">...</div>.
+9. Wrap header + typing + badges in <div align=\"center\">...</div>.
 10. Use HTML <table> for multi-column layouts (about, stats, ventures).
-    Add style="border:none" on all <td> elements.
+    Add style=\"border:none\" on all <td> elements.
 11. Use --- (three dashes) as section dividers.
 12. Use # for main sections. Use bold (**text**) for sub-labels.
 13. Emojis only in section headings. Max one emoji per heading.
-14. Snake setup instructions go in an HTML comment only — not visible.
+14. Snake setup instructions go in an HTML comment only - not visible.
 15. Output length: {output_length} lines.
 16. Tone: {tone}
 """.strip()
@@ -45,7 +45,7 @@ SECTION_INSTRUCTIONS = {
 - Wrap in <div align=\"center\">
 - Generate 3 lines from the bio data above:
   Profile: Line1=primary role, Line2=strongest identity, Line3=fun fact or CTA
-  Project: Line1=repo description, Line2=install command, Line3=\"⭐ Star this repo\"""",
+  Project: Line1=repo description, Line2=install command, Line3=\"Star this repo\"""",
     "badges_profile": """### badges (profile mode)
 - Use PROFILE BADGES + SOCIAL BADGES listed above
 - Wrap all in one <div align=\"center\">
@@ -57,7 +57,7 @@ SECTION_INSTRUCTIONS = {
 - Use SNAKE URL as a Markdown image inside <div align=\"center\">
 - After the image, add this HTML comment block:
   <!-- 
-    SNAKE SETUP — Add this GitHub Action to your profile repo:
+    SNAKE SETUP - Add this GitHub Action to your profile repo:
     File: .github/workflows/snake.yml
     
     name: Generate Snake Animation
@@ -100,13 +100,13 @@ SECTION_INSTRUCTIONS = {
 - Render a 2x2 HTML table, dark surface cells (#161b22 background)
 - Detect ventures from: orgs, bio @mentions, co-founder patterns in bio
 - Each cell: bold name in accent color + one-line description
-- If fewer than 4 found: add remaining as \"🚀 Something coming soon...\"
+- If fewer than 4 found: add remaining as \"Something coming soon...\"
 - Cell style: background:#161b22; border:1px solid #30363d; border-radius:6px; padding:10px""",
     "opensource": """### opensource (profile mode only)
 - Render a 2x2 HTML grid using a table
 - Source: pinned_repos where user is contributor (not owner) first,
   then top starred repos
-- Each cell: repo name (bold), one-line description, language, ⭐stars, 🍴forks
+- Each cell: repo name (bold), one-line description, language, stars, forks
 - Mark each as \"Owner\" or \"Contributor\"
 - Sort: highest-starred first. Show max 4 entries.""",
     "tech": """### tech
@@ -149,11 +149,11 @@ SECTION_INSTRUCTIONS = {
 - Use correct language identifier on each fenced code block""",
     "tree": """### tree (project mode only)
 - Build from repo contents fetched above
-- Max depth 3. Use ├── └── │ characters.
+- Max depth 3. Use tree characters.
 - Skip: node_modules, .git, __pycache__, dist, .next, .cache, venv
 - Add # inline comments on: entry points, config files, test dirs""",
     "contribute": """### contribute (project mode only)
-- Short numbered list: Fork → Clone → Branch → Commit → PR
+- Short numbered list: Fork -> Clone -> Branch -> Commit -> PR
 - Add \"All contributions are welcome!\"
 - Link to CODE_OF_CONDUCT.md if it exists""",
 }
@@ -162,10 +162,16 @@ SECTION_INSTRUCTIONS = {
 class ReadmeGenerator:
     """Construct prompts and call the configured LLM provider."""
 
-    def __init__(self, gemini_api_key: str | None = None, openai_api_key: str | None = None):
+    def __init__(
+        self,
+        gemini_api_key: str | None = None,
+        openai_api_key: str | None = None,
+        groq_api_key: str | None = None,
+    ):
         """Store provider credentials for later use."""
         self.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY")
         self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        self.groq_api_key = groq_api_key or os.getenv("GROQ_API_KEY")
 
     def build_system_prompt(self, output_length: str, tone: str) -> str:
         """Render the system prompt with runtime formatting values."""
@@ -178,20 +184,26 @@ class ReadmeGenerator:
         built_urls: dict[str, Any],
         provider: str,
     ) -> str:
-        """Generate a README using Gemini or OpenAI."""
+        """Generate a README using the selected provider."""
         system_prompt = self.build_system_prompt(config["output_length"], config["tone"])
         user_prompt = build_user_prompt(context, config, built_urls)
         provider_name = provider.lower()
+
         if provider_name == "gemini" and not self.gemini_api_key and config.get("allow_fallback"):
             markdown = render_fallback_readme(context, config, built_urls)
         elif provider_name == "openai" and not self.openai_api_key and config.get("allow_fallback"):
+            markdown = render_fallback_readme(context, config, built_urls)
+        elif provider_name == "groq" and not self.groq_api_key and config.get("allow_fallback"):
             markdown = render_fallback_readme(context, config, built_urls)
         elif provider_name == "gemini":
             markdown = await self._generate_with_gemini(system_prompt, user_prompt, config)
         elif provider_name == "openai":
             markdown = await self._generate_with_openai(system_prompt, user_prompt, config)
+        elif provider_name == "groq":
+            markdown = await self._generate_with_groq(system_prompt, user_prompt, config)
         else:
             raise LLMError(f"Unsupported LLM provider: {provider}")
+
         cleaned = strip_markdown_fences(markdown)
         if not cleaned.strip():
             raise LLMError("LLM returned empty response. Try again.")
@@ -200,7 +212,7 @@ class ReadmeGenerator:
     async def _generate_with_gemini(self, system_prompt: str, user_prompt: str, config: dict[str, Any]) -> str:
         """Call the Gemini API using the configured model."""
         if not self.gemini_api_key:
-            raise LLMError("No API key found. Set GEMINI_API_KEY or OPENAI_API_KEY in .env")
+            raise LLMError("No API key found. Set GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .env")
         try:
             import google.generativeai as genai
         except ImportError as exc:
@@ -215,12 +227,12 @@ class ReadmeGenerator:
         try:
             return await asyncio.to_thread(run)
         except Exception as exc:  # noqa: BLE001
-            raise LLMError(f"Gemini API error: {exc}\nTry --llm openai as fallback") from exc
+            raise LLMError(f"Gemini API error: {exc}\nTry --llm groq or --llm openai as fallback") from exc
 
     async def _generate_with_openai(self, system_prompt: str, user_prompt: str, config: dict[str, Any]) -> str:
         """Call the OpenAI API using the configured model."""
         if not self.openai_api_key:
-            raise LLMError("No API key found. Set GEMINI_API_KEY or OPENAI_API_KEY in .env")
+            raise LLMError("No API key found. Set GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .env")
         try:
             from openai import OpenAI
         except ImportError as exc:
@@ -240,7 +252,32 @@ class ReadmeGenerator:
         try:
             return await asyncio.to_thread(run)
         except Exception as exc:  # noqa: BLE001
-            raise LLMError(f"OpenAI API error: {exc}\nTry --llm gemini as fallback") from exc
+            raise LLMError(f"OpenAI API error: {exc}\nTry --llm groq or --llm gemini as fallback") from exc
+
+    async def _generate_with_groq(self, system_prompt: str, user_prompt: str, config: dict[str, Any]) -> str:
+        """Call the Groq OpenAI-compatible API using the configured model."""
+        if not self.groq_api_key:
+            raise LLMError("No API key found. Set GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .env")
+        try:
+            from openai import OpenAI
+        except ImportError as exc:
+            raise DependencyError("openai is not installed.") from exc
+
+        def run() -> str:
+            client = OpenAI(api_key=self.groq_api_key, base_url=GROQ_OPENAI_BASE_URL)
+            response = client.chat.completions.create(
+                model=config.get("groq_model") or DEFAULT_GROQ_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+            )
+            return response.choices[0].message.content or ""
+
+        try:
+            return await asyncio.to_thread(run)
+        except Exception as exc:  # noqa: BLE001
+            raise LLMError(f"Groq API error: {exc}\nTry --llm gemini or --llm openai as fallback") from exc
 
 
 def build_user_prompt(context: dict[str, Any], config: dict[str, Any], built_urls: dict[str, Any]) -> str:
@@ -374,22 +411,22 @@ PROJECT BADGES:
 
 ## SELF-REVIEW CHECKLIST
 Before outputting, verify:
-□ No placeholder text remains ({{USERNAME}}, etc.)
-□ All URLs are on single lines, not wrapped
-□ Section order matches SECTIONS list exactly
-□ HTML tables have no visible borders
-□ Snake comment block is present if snake section is active
-□ Capsule header and footer URLs are complete
-□ Typing SVG lines are properly encoded
-□ No AI/tool mentions anywhere in output
-□ Output starts directly with the README content
+[] No placeholder text remains ({{USERNAME}}, etc.)
+[] All URLs are on single lines, not wrapped
+[] Section order matches SECTIONS list exactly
+[] HTML tables have no visible borders
+[] Snake comment block is present if snake section is active
+[] Capsule header and footer URLs are complete
+[] Typing SVG lines are properly encoded
+[] No AI/tool mentions anywhere in output
+[] Output starts directly with the README content
 """.strip()
 
 
 def _format_languages(context: dict[str, Any]) -> str:
     """Format language lines for the prompt."""
     lines = [
-        f"  {language}: {data['percent']}% — {data['proficiency']} — hex #{data['hex']}"
+        f"  {language}: {data['percent']}% - {data['proficiency']} - hex #{data['hex']}"
         for language, data in context.get("languages", {}).items()
     ]
     return "\n".join(lines) or "  None"
@@ -398,7 +435,7 @@ def _format_languages(context: dict[str, Any]) -> str:
 def _format_pinned_repos(context: dict[str, Any]) -> str:
     """Format pinned repository lines for the prompt."""
     lines = [
-        f"  - {repo['name']}: {repo.get('description') or 'No description'} | ⭐{repo.get('stars', 0)} | 🍴{repo.get('forks', 0)} | {repo.get('language') or 'Unknown'}"
+        f"  - {repo['name']}: {repo.get('description') or 'No description'} | stars {repo.get('stars', 0)} | forks {repo.get('forks', 0)} | {repo.get('language') or 'Unknown'}"
         for repo in context.get("pinned_repos", [])
     ]
     return "\n".join(lines) or "  None"
@@ -461,6 +498,3 @@ def _build_section_instruction_block(context: dict[str, Any], config: dict[str, 
         if instruction:
             blocks.append(instruction)
     return "\n\n".join(blocks)
-
-
-

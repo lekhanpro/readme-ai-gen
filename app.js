@@ -1,12 +1,43 @@
-﻿const form = document.getElementById("generator-form");
+const form = document.getElementById("generator-form");
 const output = document.getElementById("markdown-output");
 const statusPill = document.getElementById("status-pill");
 const errorBox = document.getElementById("error-box");
 const summaryGrid = document.getElementById("summary-grid");
+const providerHealth = document.getElementById("provider-health");
 const copyButton = document.getElementById("copy-button");
 const downloadButton = document.getElementById("download-button");
 const submitButton = document.getElementById("submit-button");
 const colorInput = document.getElementById("color");
+const modeInput = document.getElementById("mode");
+const providerInput = document.getElementById("llm");
+const sectionChips = [...document.querySelectorAll(".section-chip")];
+
+const PROFILE_SECTIONS = [
+  "typing",
+  "badges",
+  "snake",
+  "about",
+  "ventures",
+  "opensource",
+  "tech",
+  "stats",
+  "contrib_graph",
+  "trophies",
+  "quote",
+  "social",
+];
+
+const PROJECT_SECTIONS = [
+  "typing",
+  "badges",
+  "about",
+  "features",
+  "install",
+  "usage",
+  "tree",
+  "tech",
+  "contribute",
+];
 
 let latestMarkdown = "";
 
@@ -15,7 +46,13 @@ function setStatus(state, text) {
   statusPill.textContent = text;
 }
 
-function setSummary({ mode = "Waiting", identity = "Paste a URL", languages = "Detected after fetch", lines = "0" }) {
+function setSummary({
+  mode = "Waiting",
+  identity = "Paste a GitHub URL",
+  languages = "Detected after fetch",
+  stats = "No data yet",
+  lines = "0 lines",
+} = {}) {
   summaryGrid.innerHTML = `
     <article>
       <span>Mode</span>
@@ -30,8 +67,8 @@ function setSummary({ mode = "Waiting", identity = "Paste a URL", languages = "D
       <strong>${languages}</strong>
     </article>
     <article>
-      <span>Lines</span>
-      <strong>${lines}</strong>
+      <span>Output</span>
+      <strong>${lines}<br />${stats}</strong>
     </article>
   `;
 }
@@ -46,18 +83,89 @@ function clearError() {
   errorBox.textContent = "";
 }
 
+function enableActions(enabled) {
+  copyButton.disabled = !enabled;
+  downloadButton.disabled = !enabled;
+}
+
+function setActiveSegment(target, value) {
+  document.querySelectorAll(`[data-target="${target}"]`).forEach((button) => {
+    button.classList.toggle("active", button.dataset.value === value);
+  });
+}
+
+function setActiveTheme(value) {
+  document.querySelectorAll(".theme-card").forEach((button) => {
+    button.classList.toggle("active", button.dataset.color === value);
+  });
+}
+
+function getDefaultSections(mode) {
+  if (mode === "profile") {
+    return PROFILE_SECTIONS;
+  }
+  if (mode === "project") {
+    return PROJECT_SECTIONS;
+  }
+  return [...new Set([...PROFILE_SECTIONS, ...PROJECT_SECTIONS])];
+}
+
+function syncSectionVisibility(mode) {
+  const defaults = new Set(getDefaultSections(mode));
+
+  sectionChips.forEach((chip) => {
+    const checkbox = chip.querySelector("input");
+    const chipModes = chip.dataset.modes;
+    const allowed = mode === "auto" ? true : chipModes === "all" || chipModes === mode;
+    chip.classList.toggle("is-disabled", !allowed);
+    checkbox.disabled = !allowed;
+    if (!allowed) {
+      checkbox.checked = false;
+      return;
+    }
+    if (mode !== "auto") {
+      checkbox.checked = defaults.has(checkbox.value);
+    }
+  });
+}
+
+function getSelectedSections() {
+  return sectionChips
+    .map((chip) => chip.querySelector("input"))
+    .filter((checkbox) => checkbox.checked && !checkbox.disabled)
+    .map((checkbox) => checkbox.value);
+}
+
 function getPayload() {
   const formData = new FormData(form);
   const payload = Object.fromEntries(formData.entries());
-  if (!payload.sections) {
-    delete payload.sections;
+  payload.sections = getSelectedSections();
+  if (!payload.icons || !payload.icons.trim()) {
+    delete payload.icons;
   }
   return payload;
 }
 
-function enableActions(enabled) {
-  copyButton.disabled = !enabled;
-  downloadButton.disabled = !enabled;
+async function loadProviderHealth() {
+  try {
+    const response = await fetch("/api/generate");
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      throw new Error("Provider status unavailable.");
+    }
+
+    const providers = payload.providers || {};
+    providerHealth.innerHTML = ["groq", "gemini", "openai"]
+      .map((name) => {
+        const online = Boolean(providers[name]);
+        const stateClass = online ? "online" : "offline";
+        const stateText = online ? "ready" : "not configured";
+        return `<span class="health-chip ${stateClass}">${name} ${stateText}</span>`;
+      })
+      .join("");
+  } catch (error) {
+    providerHealth.innerHTML = '<span class="health-chip offline">Provider status unavailable</span>';
+  }
 }
 
 async function generateReadme(event) {
@@ -81,10 +189,11 @@ async function generateReadme(event) {
     latestMarkdown = payload.markdown;
     output.value = latestMarkdown;
     setSummary({
-      mode: payload.mode,
+      mode: payload.mode === "project" ? "Project README" : "Profile README",
       identity: payload.repo ? `${payload.displayName} / ${payload.repo}` : `${payload.displayName} (@${payload.username})`,
       languages: payload.summary.languages.length ? payload.summary.languages.join(", ") : "No language data",
-      lines: String(payload.lineCount),
+      stats: `repos ${payload.summary.repos} | followers ${payload.summary.followers} | stars ${payload.summary.stars}`,
+      lines: `${payload.lineCount} lines`,
     });
     setStatus("success", "Ready");
     enableActions(true);
@@ -98,28 +207,48 @@ async function generateReadme(event) {
 
 form.addEventListener("submit", generateReadme);
 
-document.querySelectorAll(".swatch").forEach((button) => {
+[...document.querySelectorAll(".segment")].forEach((button) => {
   button.addEventListener("click", () => {
-    document.querySelectorAll(".swatch").forEach((swatch) => swatch.classList.remove("active"));
-    button.classList.add("active");
-    colorInput.value = button.dataset.color;
+    const { target, value } = button.dataset;
+    document.getElementById(target).value = value;
+    setActiveSegment(target, value);
+    if (target === "mode") {
+      syncSectionVisibility(value);
+    }
   });
 });
 
-document.querySelectorAll(".sample-button").forEach((button) => {
+[...document.querySelectorAll(".theme-card")].forEach((button) => {
+  button.addEventListener("click", () => {
+    colorInput.value = button.dataset.color;
+    setActiveTheme(button.dataset.color);
+  });
+});
+
+[...document.querySelectorAll(".sample-button")].forEach((button) => {
   button.addEventListener("click", () => {
     document.getElementById("repo-url").value = button.dataset.sample;
+    if (button.dataset.mode) {
+      modeInput.value = button.dataset.mode;
+      setActiveSegment("mode", button.dataset.mode);
+      syncSectionVisibility(button.dataset.mode);
+    }
+    document.getElementById("studio").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 
 copyButton.addEventListener("click", async () => {
-  if (!latestMarkdown) return;
+  if (!latestMarkdown) {
+    return;
+  }
   await navigator.clipboard.writeText(latestMarkdown);
   setStatus("success", "Copied");
 });
 
 downloadButton.addEventListener("click", () => {
-  if (!latestMarkdown) return;
+  if (!latestMarkdown) {
+    return;
+  }
   const blob = new Blob([latestMarkdown], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -129,5 +258,20 @@ downloadButton.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-setSummary({});
+output.value = [
+  "# README Preview",
+  "",
+  "Paste a GitHub profile or repository URL and generate your markdown here.",
+  "",
+  "- Profile mode for username/username READMEs",
+  "- Project mode for repository landing pages",
+  "- Groq, Gemini, and OpenAI provider options",
+].join("\n");
+
+setSummary();
 setStatus("idle", "Idle");
+setActiveTheme(colorInput.value);
+setActiveSegment("mode", modeInput.value);
+setActiveSegment("llm", providerInput.value);
+syncSectionVisibility(modeInput.value);
+loadProviderHealth();

@@ -1,4 +1,4 @@
-﻿"""Click CLI entry point for readme-ai-gen."""
+"""Click CLI entry point for readme-ai-gen."""
 
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ console = Console()
 @click.option("--height", type=int, default=None)
 @click.option("--sections", default=None)
 @click.option("--icons", default=None)
-@click.option("--llm", type=click.Choice(["gemini", "openai"]), default=None)
+@click.option("--llm", type=click.Choice(["gemini", "openai", "groq"]), default=None)
 @click.option("--output", default=None)
 @click.option("--copy", is_flag=True)
 @click.option("--dry-run", is_flag=True)
@@ -237,6 +237,7 @@ def _build_config(
         "llm": llm,
         "gemini_model": os.getenv("GEMINI_MODEL") or None,
         "openai_model": os.getenv("OPENAI_MODEL") or None,
+        "groq_model": os.getenv("GROQ_MODEL") or None,
         "output": output,
         "output_length": DEFAULT_OUTPUT_LENGTH,
         "tone": DEFAULT_TONE,
@@ -362,6 +363,7 @@ def _run_wizard(
     llm_choice = questionary.select(
         "Step 6/6 — LLM Provider",
         choices=[
+            questionary.Choice("Groq (llama-3.3-70b-versatile)", value="groq"),
             questionary.Choice("Gemini (gemini-1.5-flash)", value="gemini"),
             questionary.Choice("OpenAI (gpt-4o-mini)", value="openai"),
         ],
