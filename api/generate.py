@@ -1,4 +1,4 @@
-﻿"""Vercel serverless endpoint for web-based README generation."""
+"""Vercel serverless endpoint for web-based README generation."""
 
 from __future__ import annotations
 

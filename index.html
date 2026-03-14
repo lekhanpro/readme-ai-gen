@@ -40,10 +40,9 @@
       <section class="hero shell">
         <div class="hero-copy panel-glass">
           <p class="eyebrow">GitHub profile README maker</p>
-          <h1>Design the README, then preview it before you ship it.</h1>
+          <h1>Customise the README, then inspect it before you publish it.</h1>
           <p class="lede">
-            Build profile and repository READMEs from real GitHub data, tune the look, switch providers, and inspect the final Markdown in a
-            live rendered preview.
+            Choose a provider, tone, section preset, color theme, widget mix, and layout direction. Generate once, then switch between raw Markdown and a rendered preview.
           </p>
           <div class="hero-actions">
             <a href="#studio" class="primary-link">Launch studio</a>
@@ -53,7 +52,7 @@
           <div class="hero-strip">
             <span>NVIDIA default</span>
             <span>Markdown + live preview</span>
-            <span>Profile + project modes</span>
+            <span>More layout controls</span>
           </div>
         </div>
 
@@ -73,20 +72,20 @@
               </div>
               <div class="preview-grid">
                 <article>
-                  <strong>Header</strong>
-                  <p>capsule banner and typing line</p>
+                  <strong>Presets</strong>
+                  <p>minimal, showcase, full</p>
                 </article>
                 <article>
                   <strong>Widgets</strong>
-                  <p>stats, streaks, graphs, trophies</p>
+                  <p>stats, graphs, trophies, cards</p>
                 </article>
                 <article>
-                  <strong>Live tab</strong>
-                  <p>rendered markdown preview</p>
+                  <strong>Tone</strong>
+                  <p>concise, technical, expressive</p>
                 </article>
                 <article>
-                  <strong>Output</strong>
-                  <p>copy or download README.md</p>
+                  <strong>Preview</strong>
+                  <p>source tab and rendered tab</p>
                 </article>
               </div>
             </div>
@@ -94,7 +93,7 @@
           <div class="floating-tags">
             <span>README.md</span>
             <span>profile cards</span>
-            <span>repo showcase</span>
+            <span>custom presets</span>
           </div>
         </div>
       </section>
@@ -105,12 +104,12 @@
           <span>LLM providers</span>
         </article>
         <article class="ribbon-card">
-          <strong>2</strong>
-          <span>preview modes</span>
+          <strong>3</strong>
+          <span>section presets</span>
         </article>
         <article class="ribbon-card">
-          <strong>1</strong>
-          <span>GitHub URL to start</span>
+          <strong>2</strong>
+          <span>output views</span>
         </article>
       </section>
 
@@ -121,23 +120,23 @@
           <p>Profile data, repositories, languages, topics, and project metadata are collected first so the README prompt stays grounded.</p>
         </article>
         <article class="feature-card accent-card">
+          <p class="feature-kicker">More control</p>
+          <h2>Preset-driven customisation</h2>
+          <p>Change density, tone, accent color, section bundles, header style, badges, fonts, and widget mix from one studio.</p>
+        </article>
+        <article class="feature-card">
           <p class="feature-kicker">Live studio</p>
           <h2>Write once, preview twice</h2>
           <p>Switch between raw Markdown and a rendered preview tab without leaving the generator workspace.</p>
-        </article>
-        <article class="feature-card">
-          <p class="feature-kicker">Designed output</p>
-          <h2>Closer to profile-readme builders</h2>
-          <p>The page is shaped like a polished README product instead of a plain settings form and textarea.</p>
         </article>
       </section>
 
       <section class="studio shell" id="studio">
         <div class="section-heading">
           <p class="eyebrow">Generator studio</p>
-          <h2>Control the README and inspect it in real time.</h2>
+          <h2>Closer to a profile README builder, not just a form.</h2>
           <p>
-            This studio is built to feel closer to modern GitHub profile README tools, with a denser control panel and a stronger output workspace.
+            The studio is grouped into setup, content, and visual controls so you can push the output toward minimal, showcase, or full README layouts.
           </p>
         </div>
 
@@ -146,7 +145,7 @@
             <div class="panel-heading">
               <div>
                 <p class="panel-label">Input</p>
-                <h3>Source + theme</h3>
+                <h3>Source + layout</h3>
               </div>
               <span class="locked-pill">header and footer stay enabled</span>
             </div>
@@ -176,6 +175,18 @@
                   <button type="button" class="segment" data-target="llm" data-value="openai">OpenAI</button>
                 </div>
                 <input id="llm" name="llm" type="hidden" value="nvidia" />
+              </div>
+            </div>
+
+            <div class="option-block">
+              <div class="field-headline">
+                <span>Section preset</span>
+                <small>Apply a bundled layout quickly, then fine-tune below.</small>
+              </div>
+              <div class="preset-row" id="preset-group">
+                <button type="button" class="preset-button" data-preset="minimal">Minimal</button>
+                <button type="button" class="preset-button active" data-preset="showcase">Showcase</button>
+                <button type="button" class="preset-button" data-preset="full">Full</button>
               </div>
             </div>
 
@@ -210,10 +221,35 @@
               <input id="color" name="color" type="hidden" value="A855F7" />
             </div>
 
+            <div class="triple-fields">
+              <label class="field">
+                <span>Custom accent</span>
+                <input id="custom-color" type="text" placeholder="#A855F7" />
+              </label>
+              <label class="field">
+                <span>README density</span>
+                <select id="output_length" name="output_length">
+                  <option value="100-150">Minimal</option>
+                  <option value="200-350" selected>Standard</option>
+                  <option value="350-500">Detailed</option>
+                  <option value="500+">Exhaustive</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Tone</span>
+                <select id="tone" name="tone">
+                  <option value="Professional, personal, developer-native." selected>Professional</option>
+                  <option value="Concise, technical, and direct.">Technical</option>
+                  <option value="Confident, polished, and showcase-oriented.">Showcase</option>
+                  <option value="Minimal, sharp, and understated.">Minimal</option>
+                </select>
+              </label>
+            </div>
+
             <div class="field-shell">
               <div class="field-headline">
                 <span>Sections</span>
-                <small>Profile and project defaults stay one click away.</small>
+                <small>Preset buttons update these automatically, but every section stays editable.</small>
               </div>
               <div class="section-grid" id="section-grid">
                 <label class="section-chip" data-modes="all"><input type="checkbox" value="typing" checked />typing</label>
@@ -241,8 +277,8 @@
               <input id="icons" name="icons" type="text" value="py,ts,js,react,fastapi,docker,git,linux" placeholder="py,ts,js,react,fastapi,docker" />
             </label>
 
-            <details class="advanced-panel">
-              <summary>Advanced options</summary>
+            <details class="advanced-panel" open>
+              <summary>Visual options</summary>
               <div class="advanced-grid">
                 <label class="field">
                   <span>Header type</span>
@@ -361,18 +397,18 @@
       <section class="faq-row shell">
         <article class="faq-card">
           <p class="feature-kicker">FAQ</p>
-          <h2>What changed in this version?</h2>
-          <p>The studio now includes a rendered live preview tab and NVIDIA is wired in as the default provider.</p>
+          <h2>Can I customise more than before?</h2>
+          <p>Yes. This pass adds section presets, tone control, density control, custom accent input, and a more visible visual-settings block.</p>
         </article>
         <article class="faq-card">
           <p class="feature-kicker">Preview</p>
           <h2>Can I check the README before copying?</h2>
-          <p>Yes. Generate once, then flip between the raw Markdown tab and the rendered preview tab in the same panel.</p>
+          <p>Yes. Generate once, then flip between the raw Markdown tab and the rendered preview tab in the same output panel.</p>
         </article>
         <article class="faq-card">
-          <p class="feature-kicker">Deploy</p>
-          <h2>Does the site still work without all secrets?</h2>
-          <p>Yes. The app still has deterministic fallback rendering, but provider-backed generation is used whenever the configured key is present.</p>
+          <p class="feature-kicker">Layout</p>
+          <h2>Is it closer to a profile README builder now?</h2>
+          <p>That is the direction. The studio is grouped around presets and styling so it behaves more like a README product than a raw API demo.</p>
         </article>
       </section>
     </main>

@@ -9,11 +9,14 @@ const copyButton = document.getElementById("copy-button");
 const downloadButton = document.getElementById("download-button");
 const submitButton = document.getElementById("submit-button");
 const colorInput = document.getElementById("color");
+const customColorInput = document.getElementById("custom-color");
 const modeInput = document.getElementById("mode");
 const providerInput = document.getElementById("llm");
+const repoUrlInput = document.getElementById("repo-url");
 const sectionChips = [...document.querySelectorAll(".section-chip")];
 const previewTabs = [...document.querySelectorAll(".preview-tab")];
 const previewPanes = [...document.querySelectorAll(".preview-pane")];
+const presetButtons = [...document.querySelectorAll(".preset-button")];
 
 const PROFILE_SECTIONS = [
   "typing",
@@ -41,6 +44,19 @@ const PROJECT_SECTIONS = [
   "tech",
   "contribute",
 ];
+
+const SECTION_PRESETS = {
+  profile: {
+    minimal: ["typing", "badges", "about", "tech", "social"],
+    showcase: ["typing", "badges", "snake", "about", "tech", "stats", "trophies", "social"],
+    full: PROFILE_SECTIONS,
+  },
+  project: {
+    minimal: ["typing", "badges", "about", "install", "usage", "tech"],
+    showcase: ["typing", "badges", "about", "features", "install", "usage", "tech", "tree"],
+    full: PROJECT_SECTIONS,
+  },
+};
 
 let latestMarkdown = "";
 
@@ -99,7 +115,7 @@ function setActiveSegment(target, value) {
 
 function setActiveTheme(value) {
   document.querySelectorAll(".theme-card").forEach((button) => {
-    button.classList.toggle("active", button.dataset.color === value);
+    button.classList.toggle("active", button.dataset.color === value.toUpperCase());
   });
 }
 
@@ -112,6 +128,29 @@ function setActivePreviewTab(tabName) {
   });
 }
 
+function setActivePreset(preset) {
+  presetButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.preset === preset);
+  });
+}
+
+function inferModeFromUrl(url) {
+  try {
+    const parsed = new URL(url.trim());
+    if (!["github.com", "www.github.com"].includes(parsed.hostname)) {
+      return "profile";
+    }
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    return parts.length >= 2 ? "project" : "profile";
+  } catch {
+    return "profile";
+  }
+}
+
+function resolveEffectiveMode() {
+  return modeInput.value === "auto" ? inferModeFromUrl(repoUrlInput.value) : modeInput.value;
+}
+
 function getDefaultSections(mode) {
   if (mode === "profile") {
     return PROFILE_SECTIONS;
@@ -122,20 +161,26 @@ function getDefaultSections(mode) {
   return [...new Set([...PROFILE_SECTIONS, ...PROJECT_SECTIONS])];
 }
 
+function normalizeHex(value) {
+  const normalized = value.trim().replace(/^#/, "").toUpperCase();
+  return /^[0-9A-F]{6}$/.test(normalized) ? normalized : null;
+}
+
 function syncSectionVisibility(mode) {
-  const defaults = new Set(getDefaultSections(mode));
+  const effectiveMode = mode === "auto" ? resolveEffectiveMode() : mode;
+  const defaults = new Set(getDefaultSections(effectiveMode));
 
   sectionChips.forEach((chip) => {
     const checkbox = chip.querySelector("input");
     const chipModes = chip.dataset.modes;
-    const allowed = mode === "auto" ? true : chipModes === "all" || chipModes === mode;
+    const allowed = chipModes === "all" || chipModes === effectiveMode;
     chip.classList.toggle("is-disabled", !allowed);
     checkbox.disabled = !allowed;
     if (!allowed) {
       checkbox.checked = false;
       return;
     }
-    if (mode !== "auto") {
+    if (!checkbox.dataset.userTouched) {
       checkbox.checked = defaults.has(checkbox.value);
     }
   });
@@ -146,6 +191,23 @@ function getSelectedSections() {
     .map((chip) => chip.querySelector("input"))
     .filter((checkbox) => checkbox.checked && !checkbox.disabled)
     .map((checkbox) => checkbox.value);
+}
+
+function applySectionPreset(preset) {
+  const effectiveMode = resolveEffectiveMode();
+  const presetValues = new Set(SECTION_PRESETS[effectiveMode]?.[preset] || getDefaultSections(effectiveMode));
+
+  sectionChips.forEach((chip) => {
+    const checkbox = chip.querySelector("input");
+    const chipModes = chip.dataset.modes;
+    const allowed = chipModes === "all" || chipModes === effectiveMode;
+    checkbox.dataset.userTouched = "true";
+    checkbox.disabled = !allowed;
+    chip.classList.toggle("is-disabled", !allowed);
+    checkbox.checked = allowed && presetValues.has(checkbox.value);
+  });
+
+  setActivePreset(preset);
 }
 
 function getPayload() {
@@ -197,7 +259,7 @@ async function loadProviderHealth() {
         return `<span class="health-chip ${stateClass}">${name} ${stateText}</span>`;
       })
       .join("");
-  } catch (error) {
+  } catch {
     providerHealth.innerHTML = '<span class="health-chip offline">Provider status unavailable</span>';
   }
 }
@@ -249,6 +311,7 @@ form.addEventListener("submit", generateReadme);
     setActiveSegment(target, value);
     if (target === "mode") {
       syncSectionVisibility(value);
+      applySectionPreset(document.querySelector(".preset-button.active")?.dataset.preset || "showcase");
     }
   });
 });
@@ -256,18 +319,49 @@ form.addEventListener("submit", generateReadme);
 [...document.querySelectorAll(".theme-card")].forEach((button) => {
   button.addEventListener("click", () => {
     colorInput.value = button.dataset.color;
+    customColorInput.value = `#${button.dataset.color}`;
     setActiveTheme(button.dataset.color);
+  });
+});
+
+customColorInput.addEventListener("input", () => {
+  const normalized = normalizeHex(customColorInput.value);
+  if (!normalized) {
+    return;
+  }
+  colorInput.value = normalized;
+  setActiveTheme(normalized);
+});
+
+repoUrlInput.addEventListener("input", () => {
+  if (modeInput.value === "auto") {
+    syncSectionVisibility("auto");
+    applySectionPreset(document.querySelector(".preset-button.active")?.dataset.preset || "showcase");
+  }
+});
+
+sectionChips.forEach((chip) => {
+  const checkbox = chip.querySelector("input");
+  checkbox.addEventListener("change", () => {
+    checkbox.dataset.userTouched = "true";
+  });
+});
+
+presetButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    applySectionPreset(button.dataset.preset);
   });
 });
 
 [...document.querySelectorAll(".sample-button")].forEach((button) => {
   button.addEventListener("click", () => {
-    document.getElementById("repo-url").value = button.dataset.sample;
+    repoUrlInput.value = button.dataset.sample;
     if (button.dataset.mode) {
       modeInput.value = button.dataset.mode;
       setActiveSegment("mode", button.dataset.mode);
-      syncSectionVisibility(button.dataset.mode);
     }
+    syncSectionVisibility(modeInput.value);
+    applySectionPreset(document.querySelector(".preset-button.active")?.dataset.preset || "showcase");
     document.getElementById("studio").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
@@ -308,11 +402,12 @@ latestMarkdown = [
   "Paste a GitHub profile or repository URL and generate your markdown here.",
   "",
   "- Switch between Markdown and Live preview",
-  "- NVIDIA is the default provider in this build",
-  "- Profile and project sections remain configurable",
+  "- Apply minimal, showcase, or full section presets",
+  "- Tune density, tone, accent color, and widget mix",
 ].join("\n");
 
 output.value = latestMarkdown;
+customColorInput.value = `#${colorInput.value}`;
 renderPreview(latestMarkdown);
 setSummary();
 setStatus("idle", "Idle");
@@ -321,4 +416,5 @@ setActiveSegment("mode", modeInput.value);
 setActiveSegment("llm", providerInput.value);
 setActivePreviewTab("markdown");
 syncSectionVisibility(modeInput.value);
+applySectionPreset("showcase");
 loadProviderHealth();
