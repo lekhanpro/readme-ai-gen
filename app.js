@@ -1,4 +1,5 @@
-﻿const form = document.getElementById("generator-form");
+/* ===== DOM REFS ===== */
+const form = document.getElementById("generator-form");
 const output = document.getElementById("markdown-output");
 const previewSurface = document.getElementById("preview-surface");
 const statusPill = document.getElementById("status-pill");
@@ -17,36 +18,25 @@ const repoUrlInput = document.getElementById("repo-url");
 const toneInput = document.getElementById("tone");
 const outputLengthInput = document.getElementById("output_length");
 const headerTypeInput = document.getElementById("header_type");
-const sectionChips = [...document.querySelectorAll(".section-chip")];
-const previewTabs = [...document.querySelectorAll(".preview-tab")];
-const previewPanes = [...document.querySelectorAll(".preview-pane")];
-const presetButtons = [...document.querySelectorAll(".preset-button")];
+const lineCountEl = document.getElementById("line-count");
+const outputPanes = document.getElementById("output-panes");
 
+const sectionChips = [...document.querySelectorAll(".section-chip")];
+const previewTabs = [...document.querySelectorAll(".otab")];
+const previewPanes = [...document.querySelectorAll(".output-pane")];
+const presetButtons = [...document.querySelectorAll(".preset-button")];
+const settingsTabs = [...document.querySelectorAll(".stab")];
+const settingsPanes = [...document.querySelectorAll(".stab-pane")];
+
+/* ===== CONSTANTS ===== */
 const PROFILE_SECTIONS = [
-  "typing",
-  "badges",
-  "snake",
-  "about",
-  "ventures",
-  "opensource",
-  "tech",
-  "stats",
-  "contrib_graph",
-  "trophies",
-  "quote",
-  "social",
+  "typing", "badges", "snake", "about", "ventures", "opensource",
+  "tech", "stats", "contrib_graph", "trophies", "quote", "social",
 ];
 
 const PROJECT_SECTIONS = [
-  "typing",
-  "badges",
-  "about",
-  "features",
-  "install",
-  "usage",
-  "tree",
-  "tech",
-  "contribute",
+  "typing", "badges", "about", "features", "install", "usage",
+  "tree", "tech", "contribute",
 ];
 
 const SECTION_PRESETS = {
@@ -63,36 +53,32 @@ const SECTION_PRESETS = {
 };
 
 let latestMarkdown = "";
+let currentViewMode = "markdown";
 
+/* ===== SETTINGS TABS ===== */
+settingsTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    settingsTabs.forEach((t) => t.classList.toggle("active", t === tab));
+    settingsPanes.forEach((p) => {
+      p.classList.toggle("is-hidden", p.dataset.stabPane !== tab.dataset.stab);
+    });
+  });
+});
+
+/* ===== HELPERS ===== */
 function setStatus(state, text) {
   statusPill.className = `status-pill ${state}`;
   statusPill.textContent = text;
 }
 
-function setSummary({
-  mode = "Waiting",
-  identity = "Paste a GitHub URL",
-  languages = "Detected after fetch",
-  stats = "No data yet",
-  lines = "0 lines",
-} = {}) {
+function setSummary(data = {}) {
+  if (!summaryGrid) return;
+  const { mode = "Waiting", identity = "—", languages = "—", stats = "—", lines = "0 lines" } = data;
   summaryGrid.innerHTML = `
-    <article>
-      <span>Mode</span>
-      <strong>${mode}</strong>
-    </article>
-    <article>
-      <span>Identity</span>
-      <strong>${identity}</strong>
-    </article>
-    <article>
-      <span>Languages</span>
-      <strong>${languages}</strong>
-    </article>
-    <article>
-      <span>Output</span>
-      <strong>${lines}<br />${stats}</strong>
-    </article>
+    <article><span>Mode</span><strong>${mode}</strong></article>
+    <article><span>Identity</span><strong>${identity}</strong></article>
+    <article><span>Languages</span><strong>${languages}</strong></article>
+    <article><span>Output</span><strong>${lines}<br/>${stats}</strong></article>
   `;
 }
 
@@ -111,39 +97,66 @@ function enableActions(enabled) {
   downloadButton.disabled = !enabled;
 }
 
+function updateLineCount() {
+  const lines = latestMarkdown ? latestMarkdown.split("\n").length : 0;
+  const words = latestMarkdown ? latestMarkdown.trim().split(/\s+/).filter(Boolean).length : 0;
+  lineCountEl.textContent = `${lines} lines · ${words} words`;
+}
+
+function setSubmitLoading(loading) {
+  const label = submitButton.querySelector(".btn-label");
+  const spinner = submitButton.querySelector(".btn-spinner");
+  if (loading) {
+    label.textContent = "Generating...";
+    spinner.hidden = false;
+    submitButton.disabled = true;
+  } else {
+    label.textContent = "Generate";
+    spinner.hidden = true;
+    submitButton.disabled = false;
+  }
+}
+
+/* ===== SEGMENTED CONTROLS ===== */
 function setActiveSegment(target, value) {
-  document.querySelectorAll(`[data-target="${target}"]`).forEach((button) => {
-    button.classList.toggle("active", button.dataset.value === value);
+  document.querySelectorAll(`[data-target="${target}"]`).forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.value === value);
   });
 }
 
 function setActiveTheme(value) {
-  document.querySelectorAll(".palette-tile").forEach((button) => {
-    button.classList.toggle("active", button.dataset.color === value.toUpperCase());
+  document.querySelectorAll(".color-dot").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.color === value.toUpperCase());
   });
 }
 
-function setActivePreviewTab(tabName) {
-  previewTabs.forEach((tab) => {
-    tab.classList.toggle("active", tab.dataset.tab === tabName);
-  });
-  previewPanes.forEach((pane) => {
-    pane.classList.toggle("is-hidden", pane.dataset.pane !== tabName);
-  });
+/* ===== OUTPUT VIEW SWITCHING ===== */
+function setOutputView(mode) {
+  currentViewMode = mode;
+  previewTabs.forEach((t) => t.classList.toggle("active", t.dataset.tab === mode));
+
+  if (mode === "split") {
+    outputPanes.classList.add("split-mode");
+    previewPanes.forEach((p) => p.classList.remove("is-hidden"));
+  } else {
+    outputPanes.classList.remove("split-mode");
+    previewPanes.forEach((p) => {
+      p.classList.toggle("is-hidden", p.dataset.pane !== mode);
+    });
+  }
 }
 
 function setActivePreset(preset) {
-  presetButtons.forEach((button) => {
-    button.classList.toggle("active", button.dataset.preset === preset);
+  presetButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.preset === preset);
   });
 }
 
+/* ===== MODE / URL INFERENCE ===== */
 function inferModeFromUrl(url) {
   try {
     const parsed = new URL(url.trim());
-    if (!["github.com", "www.github.com"].includes(parsed.hostname)) {
-      return "profile";
-    }
+    if (!["github.com", "www.github.com"].includes(parsed.hostname)) return "profile";
     const parts = parsed.pathname.split("/").filter(Boolean);
     return parts.length >= 2 ? "project" : "profile";
   } catch {
@@ -156,59 +169,49 @@ function resolveEffectiveMode() {
 }
 
 function getDefaultSections(mode) {
-  if (mode === "profile") {
-    return PROFILE_SECTIONS;
-  }
-  if (mode === "project") {
-    return PROJECT_SECTIONS;
-  }
+  if (mode === "profile") return PROFILE_SECTIONS;
+  if (mode === "project") return PROJECT_SECTIONS;
   return [...new Set([...PROFILE_SECTIONS, ...PROJECT_SECTIONS])];
 }
 
 function normalizeHex(value) {
-  const normalized = value.trim().replace(/^#/, "").toUpperCase();
-  return /^[0-9A-F]{6}$/.test(normalized) ? normalized : null;
+  const n = value.trim().replace(/^#/, "").toUpperCase();
+  return /^[0-9A-F]{6}$/.test(n) ? n : null;
 }
 
+/* ===== SECTIONS ===== */
 function syncSectionVisibility(mode) {
-  const effectiveMode = mode === "auto" ? resolveEffectiveMode() : mode;
-  const defaults = new Set(getDefaultSections(effectiveMode));
+  const eff = mode === "auto" ? resolveEffectiveMode() : mode;
+  const defaults = new Set(getDefaultSections(eff));
 
   sectionChips.forEach((chip) => {
-    const checkbox = chip.querySelector("input");
-    const chipModes = chip.dataset.modes;
-    const allowed = chipModes === "all" || chipModes === effectiveMode;
+    const cb = chip.querySelector("input");
+    const allowed = chip.dataset.modes === "all" || chip.dataset.modes === eff;
     chip.classList.toggle("is-disabled", !allowed);
-    checkbox.disabled = !allowed;
-    if (!allowed) {
-      checkbox.checked = false;
-      return;
-    }
-    if (!checkbox.dataset.userTouched) {
-      checkbox.checked = defaults.has(checkbox.value);
-    }
+    cb.disabled = !allowed;
+    if (!allowed) { cb.checked = false; return; }
+    if (!cb.dataset.userTouched) cb.checked = defaults.has(cb.value);
   });
 }
 
 function getSelectedSections() {
   return sectionChips
-    .map((chip) => chip.querySelector("input"))
-    .filter((checkbox) => checkbox.checked && !checkbox.disabled)
-    .map((checkbox) => checkbox.value);
+    .map((c) => c.querySelector("input"))
+    .filter((cb) => cb.checked && !cb.disabled)
+    .map((cb) => cb.value);
 }
 
 function applySectionPreset(preset) {
-  const effectiveMode = resolveEffectiveMode();
-  const presetValues = new Set(SECTION_PRESETS[effectiveMode]?.[preset] || getDefaultSections(effectiveMode));
+  const eff = resolveEffectiveMode();
+  const vals = new Set(SECTION_PRESETS[eff]?.[preset] || getDefaultSections(eff));
 
   sectionChips.forEach((chip) => {
-    const checkbox = chip.querySelector("input");
-    const chipModes = chip.dataset.modes;
-    const allowed = chipModes === "all" || chipModes === effectiveMode;
-    checkbox.dataset.userTouched = "true";
-    checkbox.disabled = !allowed;
+    const cb = chip.querySelector("input");
+    const allowed = chip.dataset.modes === "all" || chip.dataset.modes === eff;
+    cb.dataset.userTouched = "true";
+    cb.disabled = !allowed;
     chip.classList.toggle("is-disabled", !allowed);
-    checkbox.checked = allowed && presetValues.has(checkbox.value);
+    cb.checked = allowed && vals.has(cb.value);
   });
 
   setActivePreset(preset);
@@ -216,118 +219,118 @@ function applySectionPreset(preset) {
 }
 
 function updateSelectionBoard() {
+  if (!selectionBoard) return;
   const sections = getSelectedSections();
   const preset = document.querySelector(".preset-button.active")?.dataset.preset || "showcase";
-  const chips = [
-    `Mode: ${resolveEffectiveMode()}`,
-    `Provider: ${providerInput.value}`,
-    `Preset: ${preset}`,
-    `Density: ${outputLengthInput.value}`,
+  selectionBoard.innerHTML = [
+    `Mode: ${resolveEffectiveMode()}`, `Provider: ${providerInput.value}`,
+    `Preset: ${preset}`, `Density: ${outputLengthInput.value}`,
     `Tone: ${toneInput.options[toneInput.selectedIndex].text}`,
-    `Header: ${headerTypeInput.value}`,
-    `Accent: #${colorInput.value}`,
+    `Header: ${headerTypeInput.value}`, `Accent: #${colorInput.value}`,
     `Sections: ${sections.length}`,
-  ];
-  selectionBoard.innerHTML = chips.map((label) => `<span class="selection-pill">${label}</span>`).join("");
+  ].map((l) => `<span>${l}</span>`).join("");
 }
 
+/* ===== PAYLOAD ===== */
 function getPayload() {
-  const formData = new FormData(form);
-  const payload = Object.fromEntries(formData.entries());
+  const fd = new FormData(form);
+  const payload = Object.fromEntries(fd.entries());
   payload.sections = getSelectedSections();
-  if (!payload.icons || !payload.icons.trim()) {
-    delete payload.icons;
-  }
+  if (!payload.icons || !payload.icons.trim()) delete payload.icons;
   return payload;
 }
 
+/* ===== RENDER PREVIEW ===== */
 function renderPreview(markdown) {
   if (!markdown || !markdown.trim()) {
-    previewSurface.innerHTML = '<div class="preview-empty">Generate a README to see the rendered preview.</div>';
+    previewSurface.innerHTML = '<p style="color:var(--text-dim);">Generate a README to see the preview.</p>';
     return;
   }
 
   if (window.marked) {
-    const rawHtml = window.marked.parse(markdown, {
-      breaks: true,
-      gfm: true,
-    });
-    previewSurface.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(rawHtml) : rawHtml;
-    return;
+    const raw = window.marked.parse(markdown, { breaks: true, gfm: true });
+    previewSurface.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(raw) : raw;
+  } else {
+    previewSurface.innerHTML = `<pre>${markdown.replace(/[&<>]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}</pre>`;
   }
-
-  previewSurface.innerHTML = `<pre>${markdown.replace(/[&<>]/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-  }[character]))}</pre>`;
 }
 
+/* ===== PROVIDER HEALTH ===== */
 async function loadProviderHealth() {
   try {
-    const response = await fetch("/api/generate");
-    const payload = await response.json();
-    if (!response.ok || !payload.ok) {
-      throw new Error("Provider status unavailable.");
-    }
+    const res = await fetch("/api/generate");
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error();
 
-    const providers = payload.providers || {};
+    const providers = data.providers || {};
     providerHealth.innerHTML = ["nvidia", "groq", "gemini", "openai"]
-      .map((name) => {
-        const online = Boolean(providers[name]);
-        const stateClass = online ? "online" : "offline";
-        const stateText = online ? "ready" : "not configured";
-        return `<span class="health-chip ${stateClass}">${name} ${stateText}</span>`;
-      })
-      .join("");
+      .map((n) => {
+        const on = Boolean(providers[n]);
+        return `<span class="health-chip ${on ? "online" : "offline"}">${n} ${on ? "ready" : "—"}</span>`;
+      }).join("");
   } catch {
-    providerHealth.innerHTML = '<span class="health-chip offline">Provider status unavailable</span>';
+    providerHealth.innerHTML = '<span class="health-chip offline">Providers unavailable</span>';
   }
 }
 
+/* ===== GENERATE ===== */
 async function generateReadme(event) {
   event.preventDefault();
   clearError();
-  setStatus("loading", "Generating");
-  submitButton.disabled = true;
+  setStatus("loading", "Generating...");
+  setSubmitLoading(true);
   enableActions(false);
 
   try {
-    const response = await fetch("/api/generate", {
+    const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(getPayload()),
     });
-    const payload = await response.json();
-    if (!response.ok || !payload.ok) {
-      throw new Error(payload.error || "The generator returned an unknown error.");
-    }
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || "Generation failed.");
 
-    latestMarkdown = payload.markdown;
+    latestMarkdown = data.markdown;
     output.value = latestMarkdown;
     renderPreview(latestMarkdown);
+    updateLineCount();
+
     setSummary({
-      mode: payload.mode === "project" ? "Project README" : "Profile README",
-      identity: payload.repo ? `${payload.displayName} / ${payload.repo}` : `${payload.displayName} (@${payload.username})`,
-      languages: payload.summary.languages.length ? payload.summary.languages.join(", ") : "No language data",
-      stats: `repos ${payload.summary.repos} | followers ${payload.summary.followers} | stars ${payload.summary.stars}`,
-      lines: `${payload.lineCount} lines`,
+      mode: data.mode === "project" ? "Project README" : "Profile README",
+      identity: data.repo ? `${data.displayName} / ${data.repo}` : `${data.displayName} (@${data.username})`,
+      languages: data.summary.languages.length ? data.summary.languages.join(", ") : "—",
+      stats: `repos ${data.summary.repos} | followers ${data.summary.followers} | stars ${data.summary.stars}`,
+      lines: `${data.lineCount} lines`,
     });
-    setStatus("success", "Ready");
+
+    setStatus("success", "Done");
     enableActions(true);
-  } catch (error) {
+
+    // Auto-switch to split view after generation
+    setOutputView("split");
+  } catch (err) {
     setStatus("error", "Failed");
-    showError(error.message || "Something went wrong while generating the README.");
+    showError(err.message || "Something went wrong.");
   } finally {
-    submitButton.disabled = false;
+    setSubmitLoading(false);
   }
 }
 
+/* ===== EVENT LISTENERS ===== */
 form.addEventListener("submit", generateReadme);
 
-[...document.querySelectorAll(".segment")].forEach((button) => {
-  button.addEventListener("click", () => {
-    const { target, value } = button.dataset;
+// Ctrl+Enter to generate
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    if (!submitButton.disabled) form.requestSubmit();
+  }
+});
+
+// Segmented buttons
+[...document.querySelectorAll(".seg[data-target]")].forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const { target, value } = btn.dataset;
     document.getElementById(target).value = value;
     setActiveSegment(target, value);
     if (target === "mode") {
@@ -338,22 +341,21 @@ form.addEventListener("submit", generateReadme);
   });
 });
 
-[...document.querySelectorAll(".palette-tile")].forEach((button) => {
-  button.addEventListener("click", () => {
-    colorInput.value = button.dataset.color;
-    customColorInput.value = `#${button.dataset.color}`;
-    setActiveTheme(button.dataset.color);
+// Color dots
+[...document.querySelectorAll(".color-dot")].forEach((dot) => {
+  dot.addEventListener("click", () => {
+    colorInput.value = dot.dataset.color;
+    customColorInput.value = `#${dot.dataset.color}`;
+    setActiveTheme(dot.dataset.color);
     updateSelectionBoard();
   });
 });
 
 customColorInput.addEventListener("input", () => {
-  const normalized = normalizeHex(customColorInput.value);
-  if (!normalized) {
-    return;
-  }
-  colorInput.value = normalized;
-  setActiveTheme(normalized);
+  const hex = normalizeHex(customColorInput.value);
+  if (!hex) return;
+  colorInput.value = hex;
+  setActiveTheme(hex);
   updateSelectionBoard();
 });
 
@@ -366,86 +368,94 @@ repoUrlInput.addEventListener("input", () => {
 });
 
 sectionChips.forEach((chip) => {
-  const checkbox = chip.querySelector("input");
-  checkbox.addEventListener("change", () => {
-    checkbox.dataset.userTouched = "true";
+  chip.querySelector("input").addEventListener("change", function () {
+    this.dataset.userTouched = "true";
     updateSelectionBoard();
   });
 });
 
-presetButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    applySectionPreset(button.dataset.preset);
-  });
+presetButtons.forEach((btn) => {
+  btn.addEventListener("click", () => applySectionPreset(btn.dataset.preset));
 });
 
-[...document.querySelectorAll(".sample-button")].forEach((button) => {
-  button.addEventListener("click", () => {
-    repoUrlInput.value = button.dataset.sample;
-    if (button.dataset.mode) {
-      modeInput.value = button.dataset.mode;
-      setActiveSegment("mode", button.dataset.mode);
+// Sample buttons
+[...document.querySelectorAll(".sample-button")].forEach((btn) => {
+  btn.addEventListener("click", () => {
+    repoUrlInput.value = btn.dataset.sample;
+    if (btn.dataset.mode) {
+      modeInput.value = btn.dataset.mode;
+      setActiveSegment("mode", btn.dataset.mode);
     }
     syncSectionVisibility(modeInput.value);
     applySectionPreset(document.querySelector(".preset-button.active")?.dataset.preset || "showcase");
     updateSelectionBoard();
-    document.getElementById("workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+    repoUrlInput.focus();
   });
 });
 
-[toneInput, outputLengthInput, headerTypeInput].forEach((element) => {
-  element.addEventListener("change", updateSelectionBoard);
+[toneInput, outputLengthInput, headerTypeInput].forEach((el) => {
+  el.addEventListener("change", updateSelectionBoard);
 });
 
+// Output tabs (markdown / preview / split)
 previewTabs.forEach((tab) => {
-  tab.addEventListener("click", () => setActivePreviewTab(tab.dataset.tab));
+  tab.addEventListener("click", () => setOutputView(tab.dataset.tab));
 });
 
+// Live edit → re-render
 output.addEventListener("input", () => {
   latestMarkdown = output.value;
   renderPreview(latestMarkdown);
+  updateLineCount();
 });
 
+// Copy
 copyButton.addEventListener("click", async () => {
-  if (!latestMarkdown) {
-    return;
+  if (!latestMarkdown) return;
+  try {
+    await navigator.clipboard.writeText(latestMarkdown);
+    const orig = copyButton.innerHTML;
+    copyButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    setStatus("success", "Copied");
+    setTimeout(() => { copyButton.innerHTML = orig; }, 2000);
+  } catch {
+    setStatus("error", "Copy failed");
   }
-  await navigator.clipboard.writeText(latestMarkdown);
-  setStatus("success", "Copied");
 });
 
+// Download
 downloadButton.addEventListener("click", () => {
-  if (!latestMarkdown) {
-    return;
-  }
+  if (!latestMarkdown) return;
   const blob = new Blob([latestMarkdown], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "README.md";
-  anchor.click();
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "README.md";
+  a.click();
   URL.revokeObjectURL(url);
 });
 
+/* ===== INIT ===== */
 latestMarkdown = [
   "# README Preview",
   "",
-  "Paste a GitHub profile or repository URL and generate your markdown here.",
+  "Paste a GitHub profile or repository URL above and hit **Generate** (or press `Ctrl+Enter`).",
   "",
-  "- Switch between Markdown and Live preview",
+  "- Switch between **Markdown**, **Preview**, and **Split** view",
   "- Apply minimal, showcase, or full section presets",
-  "- Tune density, tone, accent color, and module mix",
+  "- Customize colors, headers, animations, badges, and more",
 ].join("\n");
 
 output.value = latestMarkdown;
 customColorInput.value = `#${colorInput.value}`;
 renderPreview(latestMarkdown);
+updateLineCount();
 setSummary();
 setStatus("idle", "Idle");
 setActiveTheme(colorInput.value);
 setActiveSegment("mode", modeInput.value);
 setActiveSegment("llm", providerInput.value);
-setActivePreviewTab("markdown");
+setOutputView("markdown");
 syncSectionVisibility(modeInput.value);
 applySectionPreset("showcase");
 updateSelectionBoard();

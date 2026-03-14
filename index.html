@@ -1,179 +1,146 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>readme-ai-gen</title>
-    <meta
-      name="description"
-      content="Generator-first GitHub README studio with live preview, presets, and provider-backed output."
-    />
+    <title>readme-ai-gen — AI README Studio</title>
+    <meta name="description" content="Generate polished GitHub READMEs with AI. Paste a URL, customize, and preview instantly." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="paper-noise"></div>
-    <div class="field-glow field-glow-one"></div>
-    <div class="field-glow field-glow-two"></div>
+    <div class="noise-layer"></div>
+    <div class="glow glow-purple"></div>
+    <div class="glow glow-cyan"></div>
 
-    <header class="topbar shell">
-      <a class="brand" href="#top">
-        <span class="brand-chip">RG</span>
-        <span class="brand-copy">
-          <strong>readme-ai-gen</strong>
-          <small>generator-first README studio</small>
-        </span>
-      </a>
-      <div class="topbar-actions">
-        <a href="#workspace" class="top-link">Studio</a>
-        <a href="https://github.com/lekhanpro/readme-ai-gen" class="top-link">GitHub</a>
+    <!-- ====== TOPBAR ====== -->
+    <header class="topbar">
+      <div class="topbar-inner shell">
+        <a class="brand" href="#">
+          <span class="brand-icon">RG</span>
+          <span class="brand-text">readme-ai-gen</span>
+        </a>
+        <nav class="topbar-nav">
+          <span class="status-pill idle" id="status-pill">Idle</span>
+          <a href="https://github.com/lekhanpro/readme-ai-gen" class="nav-link" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
+        </nav>
       </div>
     </header>
 
-    <main id="top" class="shell app-shell">
-      <section class="intro-band ink-card">
-        <div class="intro-copy">
-          <p class="eyebrow">README Control Deck</p>
-          <h1>Redesigned as a proper generator, not a dressed-up textarea.</h1>
-          <p class="lede">
-            Start with a GitHub URL, choose a visual direction, pick a content preset, and move between source and rendered preview without leaving the workspace.
-          </p>
-        </div>
-        <div class="intro-stats">
-          <article>
-            <strong>4</strong>
-            <span>providers</span>
-          </article>
-          <article>
-            <strong>3</strong>
-            <span>presets</span>
-          </article>
-          <article>
-            <strong>2</strong>
-            <span>preview modes</span>
-          </article>
-        </div>
+    <main class="shell main-content">
+      <!-- ====== HERO + URL BAR ====== -->
+      <section class="hero">
+        <h1>Generate stunning READMEs <span class="gradient-text">with AI</span></h1>
+        <p class="hero-sub">Paste a GitHub URL, pick your style, and get a polished README in seconds.</p>
       </section>
 
-      <section class="workspace-grid" id="workspace">
-        <form id="generator-form" class="control-deck">
-          <section class="deck-card source-card">
-            <div class="card-header">
-              <div>
-                <p class="card-label">Source</p>
-                <h2>Profile or repository</h2>
-              </div>
-              <span class="micro-pill">header + footer locked</span>
-            </div>
+      <form id="generator-form">
+        <!-- ====== URL INPUT BAR ====== -->
+        <section class="url-bar glass-card">
+          <div class="url-bar-main">
+            <input id="repo-url" name="url" type="url" required placeholder="https://github.com/username or https://github.com/username/repo" />
+            <button id="submit-button" type="submit" class="btn-primary">
+              <span class="btn-label">Generate</span>
+              <span class="btn-spinner" hidden>
+                <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+          </div>
+          <div class="url-bar-samples">
+            <button type="button" class="chip sample-button" data-sample="https://github.com/vercel" data-mode="profile">Profile: vercel</button>
+            <button type="button" class="chip sample-button" data-sample="https://github.com/vercel/next.js" data-mode="project">Project: next.js</button>
+            <button type="button" class="chip sample-button" data-sample="https://github.com/torvalds" data-mode="profile">Profile: torvalds</button>
+          </div>
+        </section>
 
-            <label class="field">
-              <span>GitHub URL</span>
-              <input id="repo-url" name="url" type="url" required placeholder="https://github.com/username or https://github.com/username/repo" />
-            </label>
+        <!-- ====== SETTINGS TABS ====== -->
+        <section class="settings-panel glass-card">
+          <div class="settings-tabs" id="settings-tabs">
+            <button type="button" class="stab active" data-stab="source">Source</button>
+            <button type="button" class="stab" data-stab="style">Style</button>
+            <button type="button" class="stab" data-stab="sections">Sections</button>
+          </div>
 
-            <div class="quick-actions">
-              <button type="button" class="soft-button sample-button" data-sample="https://github.com/vercel" data-mode="profile">Profile sample</button>
-              <button type="button" class="soft-button sample-button" data-sample="https://github.com/vercel/next.js" data-mode="project">Project sample</button>
-              <button type="button" class="soft-button sample-button" data-sample="https://github.com/torvalds" data-mode="profile">Minimal sample</button>
-            </div>
-
-            <div class="dual-blocks">
-              <div class="field-shell">
-                <span>Mode</span>
-                <div class="segmented" id="mode-group">
-                  <button type="button" class="segment active" data-target="mode" data-value="auto">Auto</button>
-                  <button type="button" class="segment" data-target="mode" data-value="profile">Profile</button>
-                  <button type="button" class="segment" data-target="mode" data-value="project">Project</button>
+          <!-- Tab: Source -->
+          <div class="stab-pane" data-stab-pane="source">
+            <div class="settings-row">
+              <div class="field-group">
+                <label class="field-label">Mode</label>
+                <div class="seg-group" id="mode-group">
+                  <button type="button" class="seg active" data-target="mode" data-value="auto">Auto</button>
+                  <button type="button" class="seg" data-target="mode" data-value="profile">Profile</button>
+                  <button type="button" class="seg" data-target="mode" data-value="project">Project</button>
                 </div>
                 <input id="mode" name="mode" type="hidden" value="auto" />
               </div>
-
-              <div class="field-shell">
-                <span>Provider</span>
-                <div class="segmented" id="provider-group">
-                  <button type="button" class="segment active" data-target="llm" data-value="nvidia">NVIDIA</button>
-                  <button type="button" class="segment" data-target="llm" data-value="groq">Groq</button>
-                  <button type="button" class="segment" data-target="llm" data-value="gemini">Gemini</button>
-                  <button type="button" class="segment" data-target="llm" data-value="openai">OpenAI</button>
+              <div class="field-group">
+                <label class="field-label">Provider</label>
+                <div class="seg-group" id="provider-group">
+                  <button type="button" class="seg active" data-target="llm" data-value="nvidia">NVIDIA</button>
+                  <button type="button" class="seg" data-target="llm" data-value="groq">Groq</button>
+                  <button type="button" class="seg" data-target="llm" data-value="gemini">Gemini</button>
+                  <button type="button" class="seg" data-target="llm" data-value="openai">OpenAI</button>
                 </div>
                 <input id="llm" name="llm" type="hidden" value="nvidia" />
               </div>
             </div>
-          </section>
-
-          <section class="deck-card preset-card">
-            <div class="card-header compact-header">
-              <div>
-                <p class="card-label">Composition</p>
-                <h2>Preset + density</h2>
+            <div class="settings-row">
+              <div class="field-group">
+                <label class="field-label">Preset</label>
+                <div class="seg-group" id="preset-group">
+                  <button type="button" class="preset-button seg" data-preset="minimal">Minimal</button>
+                  <button type="button" class="preset-button seg active" data-preset="showcase">Showcase</button>
+                  <button type="button" class="preset-button seg" data-preset="full">Full</button>
+                </div>
               </div>
-            </div>
-
-            <div class="preset-row" id="preset-group">
-              <button type="button" class="preset-button" data-preset="minimal">Minimal</button>
-              <button type="button" class="preset-button active" data-preset="showcase">Showcase</button>
-              <button type="button" class="preset-button" data-preset="full">Full</button>
-            </div>
-
-            <div class="triple-fields">
-              <label class="field">
-                <span>Density</span>
+              <div class="field-group">
+                <label class="field-label">Density</label>
                 <select id="output_length" name="output_length">
                   <option value="100-150">Minimal</option>
                   <option value="200-350" selected>Standard</option>
                   <option value="350-500">Detailed</option>
                   <option value="500+">Exhaustive</option>
                 </select>
-              </label>
-              <label class="field">
-                <span>Tone</span>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Tone</label>
                 <select id="tone" name="tone">
                   <option value="Professional, personal, developer-native." selected>Professional</option>
                   <option value="Concise, technical, and direct.">Technical</option>
                   <option value="Confident, polished, and showcase-oriented.">Showcase</option>
                   <option value="Minimal, sharp, and understated.">Minimal</option>
                 </select>
-              </label>
-              <label class="field">
-                <span>Capsule height</span>
-                <input id="height" name="height" type="number" min="120" max="320" value="200" />
-              </label>
-            </div>
-          </section>
-
-          <section class="deck-card appearance-card">
-            <div class="card-header compact-header">
-              <div>
-                <p class="card-label">Appearance</p>
-                <h2>Theme + rendering</h2>
               </div>
             </div>
-
-            <div class="field-shell">
-              <span>Accent palette</span>
-              <div class="palette-grid" id="theme-grid">
-                <button type="button" class="palette-tile active" data-color="A855F7" style="--tile:#A855F7;"><strong>Purple</strong><small>#A855F7</small></button>
-                <button type="button" class="palette-tile" data-color="06B6D4" style="--tile:#06B6D4;"><strong>Cyan</strong><small>#06B6D4</small></button>
-                <button type="button" class="palette-tile" data-color="22C55E" style="--tile:#22C55E;"><strong>Green</strong><small>#22C55E</small></button>
-                <button type="button" class="palette-tile" data-color="F97316" style="--tile:#F97316;"><strong>Orange</strong><small>#F97316</small></button>
-                <button type="button" class="palette-tile" data-color="EC4899" style="--tile:#EC4899;"><strong>Pink</strong><small>#EC4899</small></button>
-                <button type="button" class="palette-tile" data-color="3B82F6" style="--tile:#3B82F6;"><strong>Blue</strong><small>#3B82F6</small></button>
-              </div>
-              <input id="color" name="color" type="hidden" value="A855F7" />
+            <div class="provider-health" id="provider-health">
+              <span class="health-chip">Checking providers...</span>
             </div>
+          </div>
 
-            <div class="triple-fields">
-              <label class="field">
-                <span>Custom accent</span>
-                <input id="custom-color" type="text" placeholder="#A855F7" />
-              </label>
-              <label class="field">
-                <span>Header type</span>
+          <!-- Tab: Style -->
+          <div class="stab-pane is-hidden" data-stab-pane="style">
+            <div class="settings-row">
+              <div class="field-group full">
+                <label class="field-label">Accent color</label>
+                <div class="color-row">
+                  <button type="button" class="color-dot active" data-color="A855F7" style="--dot:#A855F7;" title="Purple"></button>
+                  <button type="button" class="color-dot" data-color="06B6D4" style="--dot:#06B6D4;" title="Cyan"></button>
+                  <button type="button" class="color-dot" data-color="22C55E" style="--dot:#22C55E;" title="Green"></button>
+                  <button type="button" class="color-dot" data-color="F97316" style="--dot:#F97316;" title="Orange"></button>
+                  <button type="button" class="color-dot" data-color="EC4899" style="--dot:#EC4899;" title="Pink"></button>
+                  <button type="button" class="color-dot" data-color="3B82F6" style="--dot:#3B82F6;" title="Blue"></button>
+                  <input id="custom-color" type="text" placeholder="#A855F7" class="color-input" />
+                </div>
+                <input id="color" name="color" type="hidden" value="A855F7" />
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="field-group">
+                <label class="field-label">Header</label>
                 <select id="header_type" name="header_type">
                   <option value="venom">venom</option>
                   <option value="waving">waving</option>
@@ -184,9 +151,9 @@
                   <option value="shark">shark</option>
                   <option value="egg">egg</option>
                 </select>
-              </label>
-              <label class="field">
-                <span>Animation</span>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Animation</label>
                 <select id="animation" name="animation">
                   <option value="twinkling">twinkling</option>
                   <option value="fadeIn">fadeIn</option>
@@ -194,12 +161,9 @@
                   <option value="blink">blink</option>
                   <option value="blinking">blinking</option>
                 </select>
-              </label>
-            </div>
-
-            <div class="triple-fields">
-              <label class="field">
-                <span>Font</span>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Font</label>
                 <select id="font" name="font">
                   <option value="JetBrains Mono">JetBrains Mono</option>
                   <option value="Fira Code">Fira Code</option>
@@ -208,9 +172,11 @@
                   <option value="Courier Prime">Courier Prime</option>
                   <option value="Roboto Mono">Roboto Mono</option>
                 </select>
-              </label>
-              <label class="field">
-                <span>Stats theme</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="field-group">
+                <label class="field-label">Stats theme</label>
                 <select id="stats_theme" name="stats_theme">
                   <option value="radical">radical</option>
                   <option value="tokyonight">tokyonight</option>
@@ -219,27 +185,25 @@
                   <option value="synthwave">synthwave</option>
                   <option value="github_dark">github_dark</option>
                 </select>
-              </label>
-              <label class="field">
-                <span>Badge style</span>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Badge style</label>
                 <select id="badge_style" name="badge_style">
                   <option value="for-the-badge">for-the-badge</option>
                   <option value="flat-square">flat-square</option>
                   <option value="flat">flat</option>
                   <option value="plastic">plastic</option>
                 </select>
-              </label>
-            </div>
-          </section>
-
-          <section class="deck-card sections-card">
-            <div class="card-header compact-header">
-              <div>
-                <p class="card-label">Modules</p>
-                <h2>Section mix + icons</h2>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Capsule height</label>
+                <input id="height" name="height" type="number" min="120" max="320" value="200" />
               </div>
             </div>
+          </div>
 
+          <!-- Tab: Sections -->
+          <div class="stab-pane is-hidden" data-stab-pane="sections">
             <div class="section-grid" id="section-grid">
               <label class="section-chip" data-modes="all"><input type="checkbox" value="typing" checked />typing</label>
               <label class="section-chip" data-modes="all"><input type="checkbox" value="badges" checked />badges</label>
@@ -259,63 +223,64 @@
               <label class="section-chip" data-modes="profile"><input type="checkbox" value="social" checked />social</label>
               <label class="section-chip" data-modes="project"><input type="checkbox" value="contribute" checked />contribute</label>
             </div>
-
-            <label class="field">
-              <span>Tech icons</span>
-              <input id="icons" name="icons" type="text" value="py,ts,js,react,fastapi,docker,git,linux" placeholder="py,ts,js,react,fastapi,docker" />
-            </label>
-
-            <div class="form-actions">
-              <button id="submit-button" type="submit" class="primary-button">Generate README</button>
-              <button id="copy-button" type="button" class="soft-button" disabled>Copy markdown</button>
-              <button id="download-button" type="button" class="soft-button" disabled>Download README.md</button>
-            </div>
-          </section>
-        </form>
-
-        <section class="preview-column">
-          <section class="preview-hero ink-card">
-            <div>
-              <p class="card-label">Current Run</p>
-              <h2>Live README surface</h2>
-            </div>
-            <span class="status-pill idle" id="status-pill">Idle</span>
-          </section>
-
-          <section class="preview-meta deck-card">
-            <div class="provider-health" id="provider-health">
-              <span class="health-chip">Checking providers...</span>
-            </div>
-            <div class="selection-board" id="selection-board"></div>
-            <div class="summary-grid" id="summary-grid"></div>
-          </section>
-
-          <section class="preview-panel deck-card">
-            <div class="preview-tabs" id="preview-tabs">
-              <button type="button" class="preview-tab active" data-tab="markdown">Markdown</button>
-              <button type="button" class="preview-tab" data-tab="preview">Live preview</button>
-            </div>
-
-            <div class="preview-panes">
-              <div class="preview-pane" data-pane="markdown">
-                <label class="field output-field">
-                  <span>README source</span>
-                  <textarea id="markdown-output" spellcheck="false" placeholder="# Your README will render here after generation"></textarea>
-                </label>
-              </div>
-              <div class="preview-pane is-hidden" data-pane="preview">
-                <div class="preview-surface markdown-body" id="preview-surface"></div>
+            <div class="settings-row" style="margin-top:14px;">
+              <div class="field-group full">
+                <label class="field-label">Tech icons</label>
+                <input id="icons" name="icons" type="text" value="py,ts,js,react,fastapi,docker,git,linux" placeholder="py,ts,js,react,fastapi,docker" />
               </div>
             </div>
-
-            <div id="error-box" class="error-box" hidden></div>
-          </section>
+          </div>
         </section>
+
+        <!-- Hidden selection board for internal state -->
+        <div id="selection-board" style="display:none;"></div>
+      </form>
+
+      <!-- ====== OUTPUT AREA ====== -->
+      <section class="output-area glass-card">
+        <div class="output-toolbar">
+          <div class="output-tabs" id="preview-tabs">
+            <button type="button" class="otab active" data-tab="markdown">Markdown</button>
+            <button type="button" class="otab" data-tab="preview">Preview</button>
+            <button type="button" class="otab" data-tab="split">Split</button>
+          </div>
+          <div class="output-actions">
+            <span class="meta-info" id="line-count">0 lines</span>
+            <button id="copy-button" type="button" class="btn-ghost" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copy
+            </button>
+            <button id="download-button" type="button" class="btn-ghost" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Download
+            </button>
+          </div>
+        </div>
+
+        <div class="output-panes" id="output-panes">
+          <div class="output-pane" data-pane="markdown">
+            <textarea id="markdown-output" spellcheck="false" placeholder="# Your README will appear here after generation..."></textarea>
+          </div>
+          <div class="output-pane is-hidden" data-pane="preview">
+            <div class="preview-surface markdown-body" id="preview-surface"></div>
+          </div>
+        </div>
+
+        <div id="error-box" class="error-box" hidden></div>
       </section>
+
+      <!-- Hidden summary grid (kept for JS compat) -->
+      <div id="summary-grid" style="display:none;"></div>
     </main>
+
+    <footer class="footer shell">
+      <span>Built by <a href="https://github.com/lekhanpro" target="_blank" rel="noopener">@lekhanpro</a></span>
+      <span class="footer-sep">&middot;</span>
+      <span>Powered by NVIDIA, Groq, Gemini & OpenAI</span>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-    <script src="./app.js" defer></script>
+    <script src="./app.js"></script>
   </body>
 </html>
