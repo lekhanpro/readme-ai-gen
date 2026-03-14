@@ -834,3 +834,153 @@ button:disabled {
     min-height: 460px;
   }
 }
+
+.preview-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.preview-tab {
+  cursor: pointer;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.preview-tab.active {
+  color: #090d15;
+  background: linear-gradient(135deg, #ffffff, #d8bbff, #9af3e0);
+  border-color: transparent;
+}
+
+.preview-panes {
+  position: relative;
+}
+
+.preview-pane.is-hidden {
+  display: none;
+}
+
+.preview-surface {
+  min-height: 600px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 24px;
+  overflow: auto;
+}
+
+.preview-empty {
+  color: var(--muted);
+}
+
+.markdown-body {
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  margin-top: 0;
+  margin-bottom: 0.9rem;
+}
+
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body blockquote,
+.markdown-body table,
+.markdown-body pre {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.markdown-body a {
+  color: #8de8da;
+}
+
+.markdown-body img {
+  max-width: 100%;
+}
+
+.markdown-body pre,
+.markdown-body code {
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.markdown-body pre {
+  padding: 16px;
+  border-radius: 16px;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.markdown-body code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.14rem 0.38rem;
+  border-radius: 8px;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px;
+}
+
+.markdown-body blockquote {
+  padding-left: 16px;
+  border-left: 3px solid rgba(168, 85, 247, 0.6);
+  color: var(--muted-strong);
+}
+
+.faq-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 0 0 72px;
+}
+
+.faq-card {
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(16, 22, 34, 0.96), rgba(10, 14, 24, 0.96));
+  box-shadow: var(--shadow);
+}
+
+.faq-card h2 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+}
+
+.faq-card p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 1120px) {
+  .faq-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .preview-surface {
+    min-height: 460px;
+    padding: 18px;
+  }
+
+  .preview-tabs {
+    flex-wrap: wrap;
+  }
+}

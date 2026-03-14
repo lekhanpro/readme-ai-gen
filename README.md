@@ -12,7 +12,7 @@ It supports both of these generation modes:
 - Auto-detects profile vs project mode from the GitHub URL
 - Fetches structured GitHub context before the model runs
 - Builds all third-party badge, widget, and image URLs deterministically
-- Supports Groq, Gemini, and OpenAI providers
+- Supports NVIDIA, Groq, Gemini, and OpenAI providers
 - Includes interactive setup with `questionary` and `rich`
 - Supports `--dry-run`, custom output paths, and clipboard copy
 - Ships with unit tests for fetcher, builder, and generator modules
@@ -37,7 +37,7 @@ cp .env.example .env
 
 Required environment variables:
 
-- `GROQ_API_KEY`, `GEMINI_API_KEY`, or `OPENAI_API_KEY`
+- `NVIDIA_API_KEY`, `GROQ_API_KEY`, `GEMINI_API_KEY`, or `OPENAI_API_KEY`
 - `GITHUB_TOKEN` is optional, but recommended for higher rate limits and GraphQL pinned-repo support
 
 ## Usage

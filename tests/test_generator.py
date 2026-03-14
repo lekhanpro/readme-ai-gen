@@ -135,6 +135,13 @@ class GeneratorTestCase(unittest.IsolatedAsyncioTestCase):
             output = await generator.generate(CONTEXT, CONFIG, BUILT_URLS, "groq")
         self.assertEqual(output, "# Groq")
 
+    async def test_generate_routes_to_nvidia(self) -> None:
+        """The generator should dispatch to the NVIDIA provider when requested."""
+        generator = ReadmeGenerator(nvidia_api_key="key")
+        with patch.object(generator, "_generate_with_nvidia", AsyncMock(return_value="# NVIDIA")):
+            output = await generator.generate(CONTEXT, CONFIG, BUILT_URLS, "nvidia")
+        self.assertEqual(output, "# NVIDIA")
+
     async def test_generate_uses_fallback_when_enabled(self) -> None:
         """Fallback rendering should produce Markdown when no provider key exists."""
         generator = ReadmeGenerator(gemini_api_key=None, openai_api_key=None, groq_api_key=None)

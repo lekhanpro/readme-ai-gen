@@ -1,5 +1,6 @@
-const form = document.getElementById("generator-form");
+﻿const form = document.getElementById("generator-form");
 const output = document.getElementById("markdown-output");
+const previewSurface = document.getElementById("preview-surface");
 const statusPill = document.getElementById("status-pill");
 const errorBox = document.getElementById("error-box");
 const summaryGrid = document.getElementById("summary-grid");
@@ -11,6 +12,8 @@ const colorInput = document.getElementById("color");
 const modeInput = document.getElementById("mode");
 const providerInput = document.getElementById("llm");
 const sectionChips = [...document.querySelectorAll(".section-chip")];
+const previewTabs = [...document.querySelectorAll(".preview-tab")];
+const previewPanes = [...document.querySelectorAll(".preview-pane")];
 
 const PROFILE_SECTIONS = [
   "typing",
@@ -100,6 +103,15 @@ function setActiveTheme(value) {
   });
 }
 
+function setActivePreviewTab(tabName) {
+  previewTabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.tab === tabName);
+  });
+  previewPanes.forEach((pane) => {
+    pane.classList.toggle("is-hidden", pane.dataset.pane !== tabName);
+  });
+}
+
 function getDefaultSections(mode) {
   if (mode === "profile") {
     return PROFILE_SECTIONS;
@@ -146,6 +158,28 @@ function getPayload() {
   return payload;
 }
 
+function renderPreview(markdown) {
+  if (!markdown || !markdown.trim()) {
+    previewSurface.innerHTML = '<div class="preview-empty">Generate a README to see the rendered preview.</div>';
+    return;
+  }
+
+  if (window.marked) {
+    const rawHtml = window.marked.parse(markdown, {
+      breaks: true,
+      gfm: true,
+    });
+    previewSurface.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(rawHtml) : rawHtml;
+    return;
+  }
+
+  previewSurface.innerHTML = `<pre>${markdown.replace(/[&<>]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+  }[character]))}</pre>`;
+}
+
 async function loadProviderHealth() {
   try {
     const response = await fetch("/api/generate");
@@ -155,7 +189,7 @@ async function loadProviderHealth() {
     }
 
     const providers = payload.providers || {};
-    providerHealth.innerHTML = ["groq", "gemini", "openai"]
+    providerHealth.innerHTML = ["nvidia", "groq", "gemini", "openai"]
       .map((name) => {
         const online = Boolean(providers[name]);
         const stateClass = online ? "online" : "offline";
@@ -188,6 +222,7 @@ async function generateReadme(event) {
 
     latestMarkdown = payload.markdown;
     output.value = latestMarkdown;
+    renderPreview(latestMarkdown);
     setSummary({
       mode: payload.mode === "project" ? "Project README" : "Profile README",
       identity: payload.repo ? `${payload.displayName} / ${payload.repo}` : `${payload.displayName} (@${payload.username})`,
@@ -237,6 +272,15 @@ form.addEventListener("submit", generateReadme);
   });
 });
 
+previewTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setActivePreviewTab(tab.dataset.tab));
+});
+
+output.addEventListener("input", () => {
+  latestMarkdown = output.value;
+  renderPreview(latestMarkdown);
+});
+
 copyButton.addEventListener("click", async () => {
   if (!latestMarkdown) {
     return;
@@ -258,20 +302,23 @@ downloadButton.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-output.value = [
+latestMarkdown = [
   "# README Preview",
   "",
   "Paste a GitHub profile or repository URL and generate your markdown here.",
   "",
-  "- Profile mode for username/username READMEs",
-  "- Project mode for repository landing pages",
-  "- Groq, Gemini, and OpenAI provider options",
+  "- Switch between Markdown and Live preview",
+  "- NVIDIA is the default provider in this build",
+  "- Profile and project sections remain configurable",
 ].join("\n");
 
+output.value = latestMarkdown;
+renderPreview(latestMarkdown);
 setSummary();
 setStatus("idle", "Idle");
 setActiveTheme(colorInput.value);
 setActiveSegment("mode", modeInput.value);
 setActiveSegment("llm", providerInput.value);
+setActivePreviewTab("markdown");
 syncSectionVisibility(modeInput.value);
 loadProviderHealth();

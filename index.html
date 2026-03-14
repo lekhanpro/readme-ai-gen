@@ -6,7 +6,7 @@
     <title>readme-ai-gen</title>
     <meta
       name="description"
-      content="Build premium GitHub profile and project READMEs from a single URL with a fast web studio."
+      content="Build premium GitHub profile and project READMEs from a single URL with a polished live-preview studio."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,7 +27,7 @@
         <span class="brand-mark">R</span>
         <span class="brand-copy">
           <strong>readme-ai-gen</strong>
-          <small>README profile maker and repo generator</small>
+          <small>profile README generator with live preview</small>
         </span>
       </a>
       <nav class="header-actions">
@@ -39,21 +39,21 @@
     <main id="top">
       <section class="hero shell">
         <div class="hero-copy panel-glass">
-          <p class="eyebrow">Profile README generator</p>
-          <h1>Make your GitHub README look intentional, not assembled.</h1>
+          <p class="eyebrow">GitHub profile README maker</p>
+          <h1>Design the README, then preview it before you ship it.</h1>
           <p class="lede">
-            Paste a GitHub profile or repository URL, choose a visual direction, and generate a production-ready README with real data,
-            badges, widgets, and clean markdown.
+            Build profile and repository READMEs from real GitHub data, tune the look, switch providers, and inspect the final Markdown in a
+            live rendered preview.
           </p>
           <div class="hero-actions">
-            <a href="#studio" class="primary-link">Start generating</a>
-            <button type="button" class="ghost-button sample-button" data-sample="https://github.com/vercel" data-mode="profile">Try profile</button>
-            <button type="button" class="ghost-button sample-button" data-sample="https://github.com/vercel/next.js" data-mode="project">Try project</button>
+            <a href="#studio" class="primary-link">Launch studio</a>
+            <button type="button" class="ghost-button sample-button" data-sample="https://github.com/vercel" data-mode="profile">Profile example</button>
+            <button type="button" class="ghost-button sample-button" data-sample="https://github.com/vercel/next.js" data-mode="project">Project example</button>
           </div>
           <div class="hero-strip">
-            <span>Groq default</span>
-            <span>Profile + project</span>
-            <span>Copy or download</span>
+            <span>NVIDIA default</span>
+            <span>Markdown + live preview</span>
+            <span>Profile + project modes</span>
           </div>
         </div>
 
@@ -74,70 +74,70 @@
               <div class="preview-grid">
                 <article>
                   <strong>Header</strong>
-                  <p>capsule-render hero</p>
+                  <p>capsule banner and typing line</p>
                 </article>
                 <article>
-                  <strong>Stats</strong>
-                  <p>cards, streaks, trophies</p>
+                  <strong>Widgets</strong>
+                  <p>stats, streaks, graphs, trophies</p>
                 </article>
                 <article>
-                  <strong>Sections</strong>
-                  <p>profile or project mode</p>
+                  <strong>Live tab</strong>
+                  <p>rendered markdown preview</p>
                 </article>
                 <article>
                   <strong>Output</strong>
-                  <p>raw markdown, ready to ship</p>
+                  <p>copy or download README.md</p>
                 </article>
               </div>
             </div>
           </div>
           <div class="floating-tags">
             <span>README.md</span>
-            <span>github profile</span>
-            <span>repo docs</span>
+            <span>profile cards</span>
+            <span>repo showcase</span>
           </div>
         </div>
       </section>
 
       <section class="stats-ribbon shell">
         <article class="ribbon-card">
-          <strong>3</strong>
+          <strong>4</strong>
           <span>LLM providers</span>
         </article>
         <article class="ribbon-card">
-          <strong>20+</strong>
-          <span>README sections</span>
+          <strong>2</strong>
+          <span>preview modes</span>
         </article>
         <article class="ribbon-card">
           <strong>1</strong>
-          <span>GitHub URL input</span>
+          <span>GitHub URL to start</span>
         </article>
       </section>
 
       <section class="feature-row shell">
         <article class="feature-card">
           <p class="feature-kicker">Structured fetch</p>
-          <h2>Reads GitHub first</h2>
-          <p>Profiles, pinned repos, languages, project metadata, badges, and widgets are resolved before generation.</p>
+          <h2>Reads GitHub before generating</h2>
+          <p>Profile data, repositories, languages, topics, and project metadata are collected first so the README prompt stays grounded.</p>
         </article>
         <article class="feature-card accent-card">
-          <p class="feature-kicker">Visual control</p>
-          <h2>Tuned for profile README aesthetics</h2>
-          <p>Header styles, theme colors, section toggles, and tech icons are all configurable from the studio.</p>
+          <p class="feature-kicker">Live studio</p>
+          <h2>Write once, preview twice</h2>
+          <p>Switch between raw Markdown and a rendered preview tab without leaving the generator workspace.</p>
         </article>
         <article class="feature-card">
-          <p class="feature-kicker">Fast export</p>
-          <h2>Copy or download instantly</h2>
-          <p>Generate the markdown, review it in place, copy it to your clipboard, or save it as <code>README.md</code>.</p>
+          <p class="feature-kicker">Designed output</p>
+          <h2>Closer to profile-readme builders</h2>
+          <p>The page is shaped like a polished README product instead of a plain settings form and textarea.</p>
         </article>
       </section>
 
       <section class="studio shell" id="studio">
         <div class="section-heading">
           <p class="eyebrow">Generator studio</p>
-          <h2>Shape the README before you render it.</h2>
+          <h2>Control the README and inspect it in real time.</h2>
           <p>
-            The layout is opinionated so the output looks closer to polished GitHub profile generators than a raw API wrapper.
+            This studio is built to feel closer to modern GitHub profile README tools, with a denser control panel and a stronger output workspace.
           </p>
         </div>
 
@@ -148,7 +148,7 @@
                 <p class="panel-label">Input</p>
                 <h3>Source + theme</h3>
               </div>
-              <span class="locked-pill">header and footer always on</span>
+              <span class="locked-pill">header and footer stay enabled</span>
             </div>
 
             <label class="field field-wide">
@@ -170,11 +170,12 @@
               <div class="field-shell">
                 <span>Provider</span>
                 <div class="segmented" id="provider-group">
-                  <button type="button" class="segment active" data-target="llm" data-value="groq">Groq</button>
+                  <button type="button" class="segment active" data-target="llm" data-value="nvidia">NVIDIA</button>
+                  <button type="button" class="segment" data-target="llm" data-value="groq">Groq</button>
                   <button type="button" class="segment" data-target="llm" data-value="gemini">Gemini</button>
                   <button type="button" class="segment" data-target="llm" data-value="openai">OpenAI</button>
                 </div>
-                <input id="llm" name="llm" type="hidden" value="groq" />
+                <input id="llm" name="llm" type="hidden" value="nvidia" />
               </div>
             </div>
 
@@ -212,7 +213,7 @@
             <div class="field-shell">
               <div class="field-headline">
                 <span>Sections</span>
-                <small>Profile and project defaults are preselected.</small>
+                <small>Profile and project defaults stay one click away.</small>
               </div>
               <div class="section-grid" id="section-grid">
                 <label class="section-chip" data-modes="all"><input type="checkbox" value="typing" checked />typing</label>
@@ -319,7 +320,7 @@
             <div class="result-topbar">
               <div>
                 <p class="panel-label">Output</p>
-                <h3>Live markdown workspace</h3>
+                <h3>Markdown workspace</h3>
               </div>
               <span class="status-pill idle" id="status-pill">Idle</span>
             </div>
@@ -335,17 +336,49 @@
               <button id="download-button" type="button" class="ghost-button" disabled>Download README.md</button>
             </div>
 
-            <label class="field output-field">
-              <span>README preview</span>
-              <textarea id="markdown-output" spellcheck="false" placeholder="# Your README will render here after generation"></textarea>
-            </label>
+            <div class="preview-tabs" id="preview-tabs">
+              <button type="button" class="preview-tab active" data-tab="markdown">Markdown</button>
+              <button type="button" class="preview-tab" data-tab="preview">Live preview</button>
+            </div>
+
+            <div class="preview-panes">
+              <div class="preview-pane" data-pane="markdown">
+                <label class="field output-field">
+                  <span>README source</span>
+                  <textarea id="markdown-output" spellcheck="false" placeholder="# Your README will render here after generation"></textarea>
+                </label>
+              </div>
+              <div class="preview-pane is-hidden" data-pane="preview">
+                <div class="preview-surface markdown-body" id="preview-surface"></div>
+              </div>
+            </div>
 
             <div id="error-box" class="error-box" hidden></div>
           </section>
         </div>
       </section>
+
+      <section class="faq-row shell">
+        <article class="faq-card">
+          <p class="feature-kicker">FAQ</p>
+          <h2>What changed in this version?</h2>
+          <p>The studio now includes a rendered live preview tab and NVIDIA is wired in as the default provider.</p>
+        </article>
+        <article class="faq-card">
+          <p class="feature-kicker">Preview</p>
+          <h2>Can I check the README before copying?</h2>
+          <p>Yes. Generate once, then flip between the raw Markdown tab and the rendered preview tab in the same panel.</p>
+        </article>
+        <article class="faq-card">
+          <p class="feature-kicker">Deploy</p>
+          <h2>Does the site still work without all secrets?</h2>
+          <p>Yes. The app still has deterministic fallback rendering, but provider-backed generation is used whenever the configured key is present.</p>
+        </article>
+      </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

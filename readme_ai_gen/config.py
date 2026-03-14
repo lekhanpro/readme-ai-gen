@@ -14,9 +14,10 @@ DEFAULT_BADGE_STYLE = "for-the-badge"
 DEFAULT_HEIGHT = 200
 DEFAULT_OUTPUT_LENGTH = "200-350"
 DEFAULT_TONE = "Professional, personal, developer-native."
-DEFAULT_LLM = "groq"
+DEFAULT_LLM = "nvidia"
 DEFAULT_GEMINI_MODEL = "gemini-1.5-flash"
 DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_NVIDIA_MODEL = "qwen/qwen3.5-397b-a17b"
 DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 DEFAULT_OUTPUT = "./README.md"
 REQUEST_TIMEOUT = 10.0
@@ -25,6 +26,7 @@ GITHUB_API = "https://api.github.com"
 GITHUB_GRAPHQL = f"{GITHUB_API}/graphql"
 RAW_GITHUB = "https://raw.githubusercontent.com"
 GROQ_OPENAI_BASE_URL = "https://api.groq.com/openai/v1"
+NVIDIA_API_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
 THEMES = {
     "purple": {"hex": "A855F7", "rgb": "168,85,247", "gradient": "12,14,25,27"},

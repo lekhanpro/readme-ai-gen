@@ -1,4 +1,4 @@
-"""Vercel serverless endpoint for web-based README generation."""
+﻿"""Vercel serverless endpoint for web-based README generation."""
 
 from __future__ import annotations
 
@@ -37,6 +37,9 @@ from readme_ai_gen.utils import (
 load_dotenv()
 
 
+PROVIDERS = ("nvidia", "groq", "gemini", "openai")
+
+
 def build_web_config(payload: dict[str, Any]) -> dict[str, Any]:
     """Build the shared runtime config for web requests."""
     url = str(payload.get("url") or "").strip()
@@ -69,8 +72,8 @@ def build_web_config(payload: dict[str, Any]) -> dict[str, Any]:
         icon_list = [str(icon).strip() for icon in icons if str(icon).strip()]
 
     provider = str(payload.get("llm") or os.getenv("DEFAULT_LLM", DEFAULT_LLM)).lower()
-    if provider not in {"gemini", "openai", "groq"}:
-        raise ValueError("Invalid provider. Use 'gemini', 'openai', or 'groq'.")
+    if provider not in PROVIDERS:
+        raise ValueError("Invalid provider. Use 'nvidia', 'groq', 'gemini', or 'openai'.")
 
     return {
         "mode": mode,
@@ -89,6 +92,7 @@ def build_web_config(payload: dict[str, Any]) -> dict[str, Any]:
         "allow_fallback": True,
         "gemini_model": os.getenv("GEMINI_MODEL") or None,
         "groq_model": os.getenv("GROQ_MODEL") or None,
+        "nvidia_model": os.getenv("NVIDIA_MODEL") or None,
         "openai_model": os.getenv("OPENAI_MODEL") or None,
         "output_length": DEFAULT_OUTPUT_LENGTH,
         "tone": DEFAULT_TONE,
@@ -110,6 +114,7 @@ class handler(BaseHTTPRequestHandler):
                 "ok": True,
                 "service": "readme-ai-gen",
                 "providers": {
+                    "nvidia": bool(os.getenv("NVIDIA_API_KEY")),
                     "groq": bool(os.getenv("GROQ_API_KEY")),
                     "gemini": bool(os.getenv("GEMINI_API_KEY")),
                     "openai": bool(os.getenv("OPENAI_API_KEY")),
@@ -176,4 +181,3 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         if body:
             self.wfile.write(body)
-

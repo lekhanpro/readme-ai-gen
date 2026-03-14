@@ -6,12 +6,21 @@ import asyncio
 import os
 from typing import Any
 
-from .config import DEFAULT_GEMINI_MODEL, DEFAULT_GROQ_MODEL, DEFAULT_OPENAI_MODEL, GROQ_OPENAI_BASE_URL
+import httpx
+
+from .config import (
+    DEFAULT_GEMINI_MODEL,
+    DEFAULT_GROQ_MODEL,
+    DEFAULT_NVIDIA_MODEL,
+    DEFAULT_OPENAI_MODEL,
+    GROQ_OPENAI_BASE_URL,
+    NVIDIA_API_BASE_URL,
+)
 from .fallback import render_fallback_readme
 from .utils import DependencyError, LLMError, safe_excerpt, strip_markdown_fences
 
 SYSTEM_PROMPT_TEMPLATE = """
-You are a professional README engineer. You generate complete, 
+You are a professional README engineer. You generate complete,
 premium-quality README.md files for GitHub.
 
 ABSOLUTE RULES - never break these:
@@ -56,10 +65,10 @@ SECTION_INSTRUCTIONS = {
     "snake": """### snake
 - Use SNAKE URL as a Markdown image inside <div align=\"center\">
 - After the image, add this HTML comment block:
-  <!-- 
+  <!--
     SNAKE SETUP - Add this GitHub Action to your profile repo:
     File: .github/workflows/snake.yml
-    
+
     name: Generate Snake Animation
     on:
       schedule: [{cron: \"0 0 * * *\"}]
@@ -167,11 +176,13 @@ class ReadmeGenerator:
         gemini_api_key: str | None = None,
         openai_api_key: str | None = None,
         groq_api_key: str | None = None,
+        nvidia_api_key: str | None = None,
     ):
         """Store provider credentials for later use."""
         self.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY")
         self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
         self.groq_api_key = groq_api_key or os.getenv("GROQ_API_KEY")
+        self.nvidia_api_key = nvidia_api_key or os.getenv("NVIDIA_API_KEY")
 
     def build_system_prompt(self, output_length: str, tone: str) -> str:
         """Render the system prompt with runtime formatting values."""
@@ -189,18 +200,22 @@ class ReadmeGenerator:
         user_prompt = build_user_prompt(context, config, built_urls)
         provider_name = provider.lower()
 
-        if provider_name == "gemini" and not self.gemini_api_key and config.get("allow_fallback"):
-            markdown = render_fallback_readme(context, config, built_urls)
-        elif provider_name == "openai" and not self.openai_api_key and config.get("allow_fallback"):
+        if provider_name == "nvidia" and not self.nvidia_api_key and config.get("allow_fallback"):
             markdown = render_fallback_readme(context, config, built_urls)
         elif provider_name == "groq" and not self.groq_api_key and config.get("allow_fallback"):
             markdown = render_fallback_readme(context, config, built_urls)
+        elif provider_name == "gemini" and not self.gemini_api_key and config.get("allow_fallback"):
+            markdown = render_fallback_readme(context, config, built_urls)
+        elif provider_name == "openai" and not self.openai_api_key and config.get("allow_fallback"):
+            markdown = render_fallback_readme(context, config, built_urls)
+        elif provider_name == "nvidia":
+            markdown = await self._generate_with_nvidia(system_prompt, user_prompt, config)
+        elif provider_name == "groq":
+            markdown = await self._generate_with_groq(system_prompt, user_prompt, config)
         elif provider_name == "gemini":
             markdown = await self._generate_with_gemini(system_prompt, user_prompt, config)
         elif provider_name == "openai":
             markdown = await self._generate_with_openai(system_prompt, user_prompt, config)
-        elif provider_name == "groq":
-            markdown = await self._generate_with_groq(system_prompt, user_prompt, config)
         else:
             raise LLMError(f"Unsupported LLM provider: {provider}")
 
@@ -209,10 +224,53 @@ class ReadmeGenerator:
             raise LLMError("LLM returned empty response. Try again.")
         return cleaned
 
+    async def _generate_with_nvidia(self, system_prompt: str, user_prompt: str, config: dict[str, Any]) -> str:
+        """Call the NVIDIA NIM chat completions API."""
+        if not self.nvidia_api_key:
+            raise LLMError("No API key found. Set NVIDIA_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in .env")
+
+        headers = {
+            "Authorization": f"Bearer {self._normalize_nvidia_api_key(self.nvidia_api_key)}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": config.get("nvidia_model") or DEFAULT_NVIDIA_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "max_tokens": 16384,
+            "temperature": 0.60,
+            "top_p": 0.95,
+            "top_k": 20,
+            "presence_penalty": 0,
+            "repetition_penalty": 1,
+            "stream": False,
+            "chat_template_kwargs": {"enable_thinking": True},
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(f"{NVIDIA_API_BASE_URL}/chat/completions", headers=headers, json=payload)
+                response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            detail = exc.response.text[:500] if exc.response is not None else str(exc)
+            raise LLMError(f"NVIDIA API error: {detail}\nTry --llm groq as fallback") from exc
+        except httpx.HTTPError as exc:
+            raise LLMError(f"NVIDIA API request failed: {exc}\nTry --llm groq as fallback") from exc
+
+        body = response.json()
+        try:
+            message = body["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMError(f"NVIDIA API returned an unexpected response: {body}") from exc
+        return self._extract_message_content(message)
+
     async def _generate_with_gemini(self, system_prompt: str, user_prompt: str, config: dict[str, Any]) -> str:
         """Call the Gemini API using the configured model."""
         if not self.gemini_api_key:
-            raise LLMError("No API key found. Set GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .env")
+            raise LLMError("No API key found. Set NVIDIA_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in .env")
         try:
             import google.generativeai as genai
         except ImportError as exc:
@@ -227,12 +285,12 @@ class ReadmeGenerator:
         try:
             return await asyncio.to_thread(run)
         except Exception as exc:  # noqa: BLE001
-            raise LLMError(f"Gemini API error: {exc}\nTry --llm groq or --llm openai as fallback") from exc
+            raise LLMError(f"Gemini API error: {exc}\nTry --llm nvidia, --llm groq, or --llm openai as fallback") from exc
 
     async def _generate_with_openai(self, system_prompt: str, user_prompt: str, config: dict[str, Any]) -> str:
         """Call the OpenAI API using the configured model."""
         if not self.openai_api_key:
-            raise LLMError("No API key found. Set GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .env")
+            raise LLMError("No API key found. Set NVIDIA_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in .env")
         try:
             from openai import OpenAI
         except ImportError as exc:
@@ -252,12 +310,12 @@ class ReadmeGenerator:
         try:
             return await asyncio.to_thread(run)
         except Exception as exc:  # noqa: BLE001
-            raise LLMError(f"OpenAI API error: {exc}\nTry --llm groq or --llm gemini as fallback") from exc
+            raise LLMError(f"OpenAI API error: {exc}\nTry --llm nvidia, --llm groq, or --llm gemini as fallback") from exc
 
     async def _generate_with_groq(self, system_prompt: str, user_prompt: str, config: dict[str, Any]) -> str:
         """Call the Groq OpenAI-compatible API using the configured model."""
         if not self.groq_api_key:
-            raise LLMError("No API key found. Set GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY in .env")
+            raise LLMError("No API key found. Set NVIDIA_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in .env")
         try:
             from openai import OpenAI
         except ImportError as exc:
@@ -277,7 +335,34 @@ class ReadmeGenerator:
         try:
             return await asyncio.to_thread(run)
         except Exception as exc:  # noqa: BLE001
-            raise LLMError(f"Groq API error: {exc}\nTry --llm gemini or --llm openai as fallback") from exc
+            raise LLMError(f"Groq API error: {exc}\nTry --llm nvidia, --llm gemini, or --llm openai as fallback") from exc
+
+    @staticmethod
+    def _normalize_nvidia_api_key(api_key: str) -> str:
+        """Normalize the NVIDIA key into the bearer token format expected by the API."""
+        token = api_key.strip()
+        if token.startswith("nvapi-"):
+            return token
+        return f"nvapi-{token}"
+
+    @staticmethod
+    def _extract_message_content(message: Any) -> str:
+        """Normalize message content returned by provider SDKs and APIs."""
+        if isinstance(message, str):
+            return message
+        if isinstance(message, list):
+            parts: list[str] = []
+            for item in message:
+                if isinstance(item, str):
+                    parts.append(item)
+                elif isinstance(item, dict):
+                    text = item.get("text") or item.get("content") or ""
+                    if text:
+                        parts.append(str(text))
+            return "\n".join(part for part in parts if part)
+        if isinstance(message, dict):
+            return str(message.get("text") or message.get("content") or "")
+        return str(message or "")
 
 
 def build_user_prompt(context: dict[str, Any], config: dict[str, Any], built_urls: dict[str, Any]) -> str:
