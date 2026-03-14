@@ -4,6 +4,7 @@ const previewSurface = document.getElementById("preview-surface");
 const statusPill = document.getElementById("status-pill");
 const errorBox = document.getElementById("error-box");
 const summaryGrid = document.getElementById("summary-grid");
+const selectionBoard = document.getElementById("selection-board");
 const providerHealth = document.getElementById("provider-health");
 const copyButton = document.getElementById("copy-button");
 const downloadButton = document.getElementById("download-button");
@@ -13,6 +14,9 @@ const customColorInput = document.getElementById("custom-color");
 const modeInput = document.getElementById("mode");
 const providerInput = document.getElementById("llm");
 const repoUrlInput = document.getElementById("repo-url");
+const toneInput = document.getElementById("tone");
+const outputLengthInput = document.getElementById("output_length");
+const headerTypeInput = document.getElementById("header_type");
 const sectionChips = [...document.querySelectorAll(".section-chip")];
 const previewTabs = [...document.querySelectorAll(".preview-tab")];
 const previewPanes = [...document.querySelectorAll(".preview-pane")];
@@ -114,7 +118,7 @@ function setActiveSegment(target, value) {
 }
 
 function setActiveTheme(value) {
-  document.querySelectorAll(".theme-card").forEach((button) => {
+  document.querySelectorAll(".palette-tile").forEach((button) => {
     button.classList.toggle("active", button.dataset.color === value.toUpperCase());
   });
 }
@@ -208,6 +212,23 @@ function applySectionPreset(preset) {
   });
 
   setActivePreset(preset);
+  updateSelectionBoard();
+}
+
+function updateSelectionBoard() {
+  const sections = getSelectedSections();
+  const preset = document.querySelector(".preset-button.active")?.dataset.preset || "showcase";
+  const chips = [
+    `Mode: ${resolveEffectiveMode()}`,
+    `Provider: ${providerInput.value}`,
+    `Preset: ${preset}`,
+    `Density: ${outputLengthInput.value}`,
+    `Tone: ${toneInput.options[toneInput.selectedIndex].text}`,
+    `Header: ${headerTypeInput.value}`,
+    `Accent: #${colorInput.value}`,
+    `Sections: ${sections.length}`,
+  ];
+  selectionBoard.innerHTML = chips.map((label) => `<span class="selection-pill">${label}</span>`).join("");
 }
 
 function getPayload() {
@@ -313,14 +334,16 @@ form.addEventListener("submit", generateReadme);
       syncSectionVisibility(value);
       applySectionPreset(document.querySelector(".preset-button.active")?.dataset.preset || "showcase");
     }
+    updateSelectionBoard();
   });
 });
 
-[...document.querySelectorAll(".theme-card")].forEach((button) => {
+[...document.querySelectorAll(".palette-tile")].forEach((button) => {
   button.addEventListener("click", () => {
     colorInput.value = button.dataset.color;
     customColorInput.value = `#${button.dataset.color}`;
     setActiveTheme(button.dataset.color);
+    updateSelectionBoard();
   });
 });
 
@@ -331,6 +354,7 @@ customColorInput.addEventListener("input", () => {
   }
   colorInput.value = normalized;
   setActiveTheme(normalized);
+  updateSelectionBoard();
 });
 
 repoUrlInput.addEventListener("input", () => {
@@ -338,12 +362,14 @@ repoUrlInput.addEventListener("input", () => {
     syncSectionVisibility("auto");
     applySectionPreset(document.querySelector(".preset-button.active")?.dataset.preset || "showcase");
   }
+  updateSelectionBoard();
 });
 
 sectionChips.forEach((chip) => {
   const checkbox = chip.querySelector("input");
   checkbox.addEventListener("change", () => {
     checkbox.dataset.userTouched = "true";
+    updateSelectionBoard();
   });
 });
 
@@ -362,8 +388,13 @@ presetButtons.forEach((button) => {
     }
     syncSectionVisibility(modeInput.value);
     applySectionPreset(document.querySelector(".preset-button.active")?.dataset.preset || "showcase");
-    document.getElementById("studio").scrollIntoView({ behavior: "smooth", block: "start" });
+    updateSelectionBoard();
+    document.getElementById("workspace").scrollIntoView({ behavior: "smooth", block: "start" });
   });
+});
+
+[toneInput, outputLengthInput, headerTypeInput].forEach((element) => {
+  element.addEventListener("change", updateSelectionBoard);
 });
 
 previewTabs.forEach((tab) => {
@@ -403,7 +434,7 @@ latestMarkdown = [
   "",
   "- Switch between Markdown and Live preview",
   "- Apply minimal, showcase, or full section presets",
-  "- Tune density, tone, accent color, and widget mix",
+  "- Tune density, tone, accent color, and module mix",
 ].join("\n");
 
 output.value = latestMarkdown;
@@ -417,4 +448,5 @@ setActiveSegment("llm", providerInput.value);
 setActivePreviewTab("markdown");
 syncSectionVisibility(modeInput.value);
 applySectionPreset("showcase");
+updateSelectionBoard();
 loadProviderHealth();
